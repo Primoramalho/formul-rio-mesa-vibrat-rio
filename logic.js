@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'metso_alimentador_v5';
+const STORAGE_KEY = 'metso_alimentador_v6'; // Atualizado v6
 
 let currentAttachments = {};
 let modalCurrentUid = null;
@@ -378,83 +378,80 @@ function autoResizeTextarea(textarea) {
 }
 
 // ==========================================
-// COMPARTILHAMENTO VIA LINK MÁGICO (COM ? EM VEZ DE #)
+// COMPARTILHAMENTO VIA FIREBASE (LINK CURTO)
 // ==========================================
-function compartilharViaWhatsApp(tipo) {
+async function compartilharViaWhatsApp(tipo) {
   const data = collectFormData();
   data.exportedAt = new Date().toISOString();
   data.status = tipo;
 
-  const dataParaLink = { ...data };
-  dataParaLink.attachments = {}; 
-
-  const jsonStr = JSON.stringify(dataParaLink);
-  const compressed = LZString.compressToEncodedURIComponent(jsonStr);
-
-  // USA ?dados= EM VEZ DE #dados=
-  const baseUrl = window.location.href.split('?')[0].split('#')[0];
-  const linkAssinatura = `${baseUrl}?dados=${compressed}`;
-
-  let mensagem = "";
-
-  if (tipo === 'pendente_assinatura') {
-    mensagem = `Olá! Segue o relatório de comissionamento para sua assinatura.\n\n1. Clique no link abaixo.\n2. Revise as informações.\n3. Assine no campo do cliente e clique em "Concluir e Enviar".\n\n👉 ${linkAssinatura}`;
-  } else {
-    mensagem = `Olá! Segue o relatório assinado.\n\n👉 ${linkAssinatura}`;
-  }
-
-  const urlWhatsApp = `https://wa.me/?text=${encodeURIComponent(mensagem)}`;
-  window.open(urlWhatsApp, '_blank');
-  
-  showToast('Link de assinatura gerado!', 'success');
-}
-
-function carregarDadosDaUrl() {
-  // Verifica se a URL tem o parâmetro ?dados= ou #dados=
-  const urlParams = new URLSearchParams(window.location.search);
-  let compressed = urlParams.get('dados');
-  
-  if (!compressed && window.location.hash && window.location.hash.includes('dados=')) {
-    compressed = window.location.hash.split('dados=')[1];
-  }
-
-  if (!compressed) return false;
+  const docId = 'doc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
 
   try {
-    console.log("Dados encontrados na URL. Descomprimindo...");
-    const jsonStr = LZString.decompressFromEncodedURIComponent(compressed);
-    
-    if (jsonStr) {
-      const data = JSON.parse(jsonStr);
-      
-      // Salva no localStorage temporariamente para garantir
-      localStorage.setItem(STORAGE_KEY, jsonStr);
+    const { db, doc, setDoc } = window.firebaseDB;
 
-      // Como os checklists são criados via JS, precisamos criá-los primeiro
-      renderChecklists();
+    await setDoc(doc(db, "documentos", docId), data);
+
+    const baseUrl = window.location.href.split('?')[0].split('#')[0];
+    const linkAssinatura = `${baseUrl}?id=${docId}`;
+
+    let mensagem = "";
+    if (tipo === 'pendente_assinatura') {
+      mensagem = `Olá! Segue o relatório de comissionamento para sua assinatura.\n\n1. Clique no link abaixo.\n2. Revise as informações.\n3. Assine no campo do cliente e clique em "Concluir e Enviar".\n\n👉 ${linkAssinatura}`;
+    } else {
+      mensagem = `Olá! Segue o relatório assinado.\n\n👉 ${linkAssinatura}`;
+    }
+
+    const urlWhatsApp = `https://wa.me/?text=${encodeURIComponent(mensagem)}`;
+    window.open(urlWhatsApp, '_blank');
+    
+    showToast('Link de assinatura gerado com sucesso!', 'success');
+  } catch (error) {
+    console.error("Erro ao salvar no Firebase:", error);
+    showToast('Erro ao conectar com o servidor. Verifique sua internet.', 'error');
+  }
+}
+
+async function carregarDadosDaUrl() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const docId = urlParams.get('id');
+
+  if (!docId) return false;
+
+  try {
+    const { db, doc, getDoc } = window.firebaseDB;
+    
+    const docRef = doc(db, "documentos", docId);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      const data = docSnap.data();
       
-      // Aplica os dados
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+
+      renderChecklists();
       applyFormData(data);
       
-      // Muda a interface para o Modo Cliente
-      ativarModoCliente();
+      ativarModoCliente(docId);
       return true;
+    } else {
+      showToast('Documento não encontrado no servidor.', 'error');
     }
   } catch (e) {
-    console.error("Erro ao ler dados da URL:", e);
-    showToast('Link inválido ou corrompido. Peça ao técnico para gerar novamente.', 'error');
+    console.error("Erro ao ler dados do Firebase:", e);
+    showToast('Link inválido ou sem conexão. Peça ao técnico para gerar novamente.', 'error');
   }
   return false;
 }
 
-function ativarModoCliente() {
+function ativarModoCliente(docId) {
   const btnCompartilhar = document.querySelector('button[onclick="compartilharViaWhatsApp(\'pendente_assinatura\')"]');
   if (btnCompartilhar) btnCompartilhar.style.display = 'none';
   
   const btnDevolver = document.querySelector('.btn-whatsapp');
   if (btnDevolver) {
     btnDevolver.innerHTML = '<i class="fa-solid fa-check"></i> <span>Concluir e Enviar</span>';
-    btnDevolver.onclick = () => concluirAssinaturaCliente();
+    btnDevolver.onclick = () => concluirAssinaturaCliente(docId);
   }
 
   document.querySelectorAll('#reportForm input, #reportForm textarea, #reportForm select').forEach(el => {
@@ -475,21 +472,32 @@ function ativarModoCliente() {
   }, 500);
 }
 
-function concluirAssinaturaCliente() {
+async function concluirAssinaturaCliente(docId) {
   const data = collectFormData();
   data.status = 'assinado';
   
-  const jsonStr = JSON.stringify(data);
-  const compressed = LZString.compressToEncodedURIComponent(jsonStr);
-  
-  const baseUrl = window.location.href.split('?')[0].split('#')[0];
-  const linkAssinado = `${baseUrl}?dados=${compressed}`;
+  try {
+    const { db, doc, updateDoc } = window.firebaseDB;
+    
+    const docRef = doc(db, "documentos", docId);
+    await updateDoc(docRef, {
+      signatures: data.signatures,
+      opcoes: data.opcoes,
+      status: 'assinado'
+    });
 
-  const mensagem = `Olá! Documento assinado com sucesso.\n\nAqui está o link com o registro da assinatura:\n👉 ${linkAssinado}`;
-  const urlWhatsApp = `https://wa.me/?text=${encodeURIComponent(mensagem)}`;
-  window.open(urlWhatsApp, '_blank');
-  
-  showToast('Assinatura concluída! Envie o link para o técnico.', 'success');
+    const baseUrl = window.location.href.split('?')[0].split('#')[0];
+    const linkAssinado = `${baseUrl}?id=${docId}`;
+
+    const mensagem = `Olá! Documento assinado com sucesso.\n\nAqui está o link com o registro da assinatura:\n👉 ${linkAssinado}`;
+    const urlWhatsApp = `https://wa.me/?text=${encodeURIComponent(mensagem)}`;
+    window.open(urlWhatsApp, '_blank');
+    
+    showToast('Assinatura concluída! Envie o link para o técnico.', 'success');
+  } catch (error) {
+    console.error("Erro ao salvar assinatura no Firebase:", error);
+    showToast('Erro ao enviar assinatura. Tente novamente.', 'error');
+  }
 }
 
 // ==========================================
@@ -749,9 +757,9 @@ function clearForm() {
   showToast('Formulário limpo.', 'info');
 }
 
-window.onload = () => {
+window.onload = async () => {
   // Verifica se há dados na URL (Modo Cliente)
-  const isModoCliente = carregarDadosDaUrl();
+  const isModoCliente = await carregarDadosDaUrl();
   
   if (!isModoCliente) {
     // Modo Técnico normal
@@ -772,7 +780,7 @@ window.onload = () => {
       }
     }, 100);
   } else {
-    // Modo Cliente: O carregarDadosDaUrl já fez todo o trabalho (renderChecklists + applyFormData + ativarModoCliente)
+    // Modo Cliente: O carregarDadosDaUrl já fez todo o trabalho
     setTimeout(() => {
       initCanvas('sigTecnico');
       initCanvas('sigCliente');
