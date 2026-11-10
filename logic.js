@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'metso_alimentador_v6'; // Atualizado v6
+const STORAGE_KEY = 'metso_alimentador_v6';
 
 let currentAttachments = {};
 let modalCurrentUid = null;
@@ -385,6 +385,9 @@ async function compartilharViaWhatsApp(tipo) {
   data.exportedAt = new Date().toISOString();
   data.status = tipo;
 
+  // CORREÇÃO: Remove os anexos pesados (fotos/vídeos) para não estourar o Firestore
+  data.attachments = {}; 
+
   const docId = 'doc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
 
   try {
@@ -480,9 +483,14 @@ async function concluirAssinaturaCliente(docId) {
     const { db, doc, updateDoc } = window.firebaseDB;
     
     const docRef = doc(db, "documentos", docId);
+    
+    // Atualiza APENAS a assinatura e os campos de texto do cliente
     await updateDoc(docRef, {
-      signatures: data.signatures,
-      opcoes: data.opcoes,
+      'signatures.sigCliente': data.signatures.sigCliente,
+      'signatures.sigClienteName': data.signatures.sigClienteName,
+      'signatures.sigClienteCargo': data.signatures.sigClienteCargo,
+      'signatures.sigClienteDate': data.signatures.sigClienteDate,
+      'opcoes.sec5Comentario': data.opcoes.sec5Comentario,
       status: 'assinado'
     });
 
@@ -561,8 +569,13 @@ function collectFormData() {
     signatures: {
       sigTecnico: signatures.sigTecnico,
       sigCliente: signatures.sigCliente,
+      // CORREÇÃO: Adicionando Nome, Cargo e Data
+      sigTecnicoName: document.getElementById('sigTecnicoName')?.value || '',
       sigTecnicoCargo: document.getElementById('sigTecnicoCargo')?.value || '',
-      sigClienteCargo: document.getElementById('sigClienteCargo')?.value || ''
+      sigTecnicoDate: document.getElementById('sigTecnicoDate')?.value || '',
+      sigClienteName: document.getElementById('sigClienteName')?.value || '',
+      sigClienteCargo: document.getElementById('sigClienteCargo')?.value || '',
+      sigClienteDate: document.getElementById('sigClienteDate')?.value || ''
     },
     attachments: currentAttachments
   };
@@ -642,8 +655,12 @@ function applyFormData(data) {
     signatures.sigTecnico = data.signatures.sigTecnico || null;
     signatures.sigCliente = data.signatures.sigCliente || null;
     
+    if (document.getElementById('sigTecnicoName')) document.getElementById('sigTecnicoName').value = data.signatures.sigTecnicoName || '';
     if (document.getElementById('sigTecnicoCargo')) document.getElementById('sigTecnicoCargo').value = data.signatures.sigTecnicoCargo || '';
+    if (document.getElementById('sigTecnicoDate')) document.getElementById('sigTecnicoDate').value = data.signatures.sigTecnicoDate || '';
+    if (document.getElementById('sigClienteName')) document.getElementById('sigClienteName').value = data.signatures.sigClienteName || '';
     if (document.getElementById('sigClienteCargo')) document.getElementById('sigClienteCargo').value = data.signatures.sigClienteCargo || '';
+    if (document.getElementById('sigClienteDate')) document.getElementById('sigClienteDate').value = data.signatures.sigClienteDate || '';
 
     Object.keys(signatures).forEach(sigId => {
       if (signatures[sigId]) {
@@ -792,7 +809,7 @@ window.onload = async () => {
           const data = JSON.parse(raw);
           if (data.signatures) {
             Object.keys(data.signatures).forEach(sigId => {
-              if (data.signatures[sigId]) {
+              if (data.signatures[sigId] && (sigId === 'sigTecnico' || sigId === 'sigCliente')) {
                  const canvasEl = document.getElementById(`canvas_${sigId}`);
                  if (canvasEl) {
                     const ctx = canvasEl.getContext('2d');
