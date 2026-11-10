@@ -25,7 +25,7 @@ const checklistData = {
     "1.15. Conferido o torque dos trilhos",
     "1.16. Conferido o torque de fixação dos vibradores",
     "1.17. Conferido o torque dos revestimentos",
-    "1.18. Conferido o torque cardan acionamento",
+    "1.18. Conferido torque cardan acionamento",
     "1.19. O óleo dos vibradores foi substituído",
     "1.20. Tipo de óleo",
     "1.21. Respiros dos vibradores em boas condições",
@@ -418,6 +418,7 @@ function carregarDadosDaUrl() {
   if (!hash || !hash.includes('dados=')) return false;
 
   try {
+    // Pega tudo o que vem depois de #dados=
     const compressed = hash.split('dados=')[1];
     const jsonStr = LZString.decompressFromEncodedURIComponent(compressed);
     
@@ -431,7 +432,7 @@ function carregarDadosDaUrl() {
     }
   } catch (e) {
     console.error("Erro ao ler dados da URL:", e);
-    showToast('Link inválido ou corrompido.', 'error');
+    showToast('Link inválido ou corrompido. Peça ao técnico para gerar novamente.', 'error');
   }
   return false;
 }
@@ -459,8 +460,10 @@ function ativarModoCliente() {
   });
 
   // Foca no campo de assinatura do cliente
-  window.scrollTo(0, document.getElementById('canvas_sigCliente').getBoundingClientRect().top - 100);
-  showToast('Revise os dados e assine abaixo.', 'info');
+  setTimeout(() => {
+    window.scrollTo(0, document.getElementById('canvas_sigCliente').getBoundingClientRect().top - 100);
+    showToast('Revise os dados e assine abaixo.', 'info');
+  }, 500);
 }
 
 function concluirAssinaturaCliente() {
@@ -740,7 +743,7 @@ function clearForm() {
 }
 
 window.onload = () => {
-  // Verifica se há dados na URL (Modo Cliente)
+  // 1. Verifica imediatamente se há dados na URL (Modo Cliente)
   const isModoCliente = carregarDadosDaUrl();
   
   if (!isModoCliente) {
@@ -763,11 +766,24 @@ window.onload = () => {
     }, 100);
   } else {
     // Modo Cliente (dados vieram da URL)
-    renderChecklists(); // Renderiza os checklists visualmente
+    // O applyFormData já preencheu os inputs. Precisamos apenas renderizar os checklists e os canvases.
+    renderChecklists(); 
     setTimeout(() => {
       initCanvas('sigTecnico');
       initCanvas('sigCliente');
-    }, 100);
+      
+      // Re-aplica os dados nos checklists (pois eles acabaram de ser renderizados)
+      // (Esta parte é um workaround porque os checklists são criados via JS)
+      const hash = window.location.hash;
+      if (hash && hash.includes('dados=')) {
+         try {
+           const compressed = hash.split('dados=')[1];
+           const jsonStr = LZString.decompressFromEncodedURIComponent(compressed);
+           if (jsonStr) applyFormData(JSON.parse(jsonStr));
+         } catch(e) {}
+      }
+
+    }, 300); // Um pouco mais de tempo para garantir que os checklists renderizaram
   }
   
   const form = document.getElementById('reportForm');
