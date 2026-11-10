@@ -46,7 +46,6 @@ html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
   .no-print { display: none !important; }
   .shadow-card, .shadow-cardHover { box-shadow: none !important; }
 
-  /* Esconde todos os inputs por padrão na impressão */
   input, select, textarea {
     border: none !important; 
     background: transparent !important;
@@ -71,16 +70,41 @@ html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
   }
   .checkbox-wrapper input[type="checkbox"]:checked + .custom-checkbox::after,
   .radio-wrapper input[type="radio"]:checked + .custom-checkbox::after { color: #fff !important; }
-  
-  .page-break { page-break-before: always; }
+
+  /* ================================================
+     REGRAS DE QUEBRA DE PÁGINA
+     ================================================
+     - Nenhuma quebra forçada entre as seções 1 a 6.
+     - Apenas a SEÇÃO 7 (Assinaturas) tem controle:
+       se ela não couber inteira no espaço restante da
+       página atual, o navegador a empurra inteira para
+       a próxima folha (break-inside: avoid).
+     ================================================ */
+  .secao-assinaturas {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Cabeçalho da seção nunca fica sozinho no fim da página */
+  .section-head {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  /* Linhas de tabela não se cortam */
   tr { break-inside: avoid; page-break-inside: avoid; }
-  
+
+  /* Cada sub-bloco de Registros (4.1, 4.2, ...) não se corta */
+  .reg-item { break-inside: avoid; page-break-inside: avoid; }
+
+  /* Evita linhas órfãs/solitárias em textos */
+  p, .reg-item, td { orphans: 3; widows: 3; }
+
   /* ASSINATURA NA IMPRESSÃO */
   .signature-canvas { display: none !important; }
   .signature-img-print { display: block !important; max-height: 80px !important; margin: 0 auto; object-fit: contain; }
   .signature-wrap { border: none !important; }
 
-  /* FORÇA A EXIBIÇÃO DOS CAMPOS DE TEXTO DA ASSINATURA */
   .input-assinatura {
     display: inline-block !important;
     visibility: visible !important;
