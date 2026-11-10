@@ -520,32 +520,52 @@
           
           <!-- Técnico -->
           <div class="border border-ink-200 bg-ink-25 p-3 flex flex-col gap-2.5 signature-wrap">
-            <div class="relative w-full">
+            <div class="relative w-full mb-2">
               <canvas id="canvas_sigTecnico" class="signature-canvas border border-ink-200"></canvas>
               <img id="img_sigTecnico" src="" class="signature-img-print" alt="Assinatura Técnico">
             </div>
-            <div class="flex items-center justify-between mt-1">
-              <span class="text-[10px] text-ink-500 uppercase font-bold">Técnico Metso</span>
-              <button type="button" onclick="clearSignature('sigTecnico')" class="text-[9px] text-metso-500 hover:text-metso-700 font-bold uppercase no-print"><i class="fa-solid fa-eraser"></i> Limpar</button>
+            <div class="border-t-2 border-ink-900 text-center text-[10px] font-black uppercase pt-2 tracking-widest text-ink-900">Técnico Metso</div>
+            
+            <!-- Campos do Técnico -->
+            <div class="mt-2 space-y-2">
+              <div class="flex items-center gap-2 text-[10px]">
+                <span class="font-bold text-ink-500 uppercase w-12 shrink-0">Nome</span>
+                <input type="text" id="sigTecnicoName" class="w-full outline-none border-b border-ink-200 focus:border-ink-900 font-medium bg-transparent" placeholder="Nome do Técnico">
+              </div>
+              <div class="flex items-center gap-2 text-[10px]">
+                <span class="font-bold text-ink-500 uppercase w-12 shrink-0">Cargo</span>
+                <input type="text" id="sigTecnicoCargo" class="w-full outline-none border-b border-ink-200 focus:border-ink-900 font-medium bg-transparent" placeholder="Cargo / Função">
+              </div>
+              <div class="flex items-center gap-2 text-[10px]">
+                <span class="font-bold text-ink-500 uppercase w-12 shrink-0">Data</span>
+                <input type="date" id="sigTecnicoDate" class="w-full outline-none border-b border-ink-200 focus:border-ink-900 font-medium bg-transparent">
+              </div>
             </div>
-            <div class="flex items-center gap-2 text-[10px]"><span class="font-bold text-ink-500 uppercase w-12">Nome</span><input type="text" id="sigTecnicoName" class="w-full outline-none border-b border-ink-200 focus:border-ink-900 font-medium bg-transparent" placeholder="Nome do Técnico"></div>
-            <div class="flex items-center gap-2 text-[10px]"><span class="font-bold text-ink-500 uppercase w-12">Cargo</span><input type="text" id="sigTecnicoCargo" class="w-full outline-none border-b border-ink-200 focus:border-ink-900 font-medium bg-transparent" placeholder="Cargo / Função"></div>
-            <div class="flex items-center gap-2 text-[10px]"><span class="font-bold text-ink-500 uppercase w-12">Data</span><input type="date" id="sigTecnicoDate" class="w-full outline-none border-b border-ink-200 focus:border-ink-900 font-medium bg-transparent"></div>
           </div>
 
           <!-- Cliente -->
           <div class="border border-ink-200 bg-ink-25 p-3 flex flex-col gap-2.5 signature-wrap">
-            <div class="relative w-full">
+            <div class="relative w-full mb-2">
               <canvas id="canvas_sigCliente" class="signature-canvas border border-ink-200"></canvas>
               <img id="img_sigCliente" src="" class="signature-img-print" alt="Assinatura Cliente">
             </div>
-            <div class="flex items-center justify-between mt-1">
-              <span class="text-[10px] text-ink-500 uppercase font-bold">Cliente</span>
-              <button type="button" onclick="clearSignature('sigCliente')" class="text-[9px] text-metso-500 hover:text-metso-700 font-bold uppercase no-print"><i class="fa-solid fa-eraser"></i> Limpar</button>
+            <div class="border-t-2 border-ink-900 text-center text-[10px] font-black uppercase pt-2 tracking-widest text-ink-900">Cliente</div>
+            
+            <!-- Campos do Cliente -->
+            <div class="mt-2 space-y-2">
+              <div class="flex items-center gap-2 text-[10px]">
+                <span class="font-bold text-ink-500 uppercase w-12 shrink-0">Nome</span>
+                <input type="text" id="sigClienteName" class="w-full outline-none border-b border-ink-200 focus:border-ink-900 font-medium bg-transparent" placeholder="Nome do Representante">
+              </div>
+              <div class="flex items-center gap-2 text-[10px]">
+                <span class="font-bold text-ink-500 uppercase w-12 shrink-0">Cargo</span>
+                <input type="text" id="sigClienteCargo" class="w-full outline-none border-b border-ink-200 focus:border-ink-900 font-medium bg-transparent" placeholder="Cargo / Função">
+              </div>
+              <div class="flex items-center gap-2 text-[10px]">
+                <span class="font-bold text-ink-500 uppercase w-12 shrink-0">Data</span>
+                <input type="date" id="sigClienteDate" class="w-full outline-none border-b border-ink-200 focus:border-ink-900 font-medium bg-transparent">
+              </div>
             </div>
-            <div class="flex items-center gap-2 text-[10px]"><span class="font-bold text-ink-500 uppercase w-12">Nome</span><input type="text" id="sigClienteName" class="w-full outline-none border-b border-ink-200 focus:border-ink-900 font-medium bg-transparent" placeholder="Nome do Representante"></div>
-            <div class="flex items-center gap-2 text-[10px]"><span class="font-bold text-ink-500 uppercase w-12">Cargo</span><input type="text" id="sigClienteCargo" class="w-full outline-none border-b border-ink-200 focus:border-ink-900 font-medium bg-transparent" placeholder="Cargo / Função"></div>
-            <div class="flex items-center gap-2 text-[10px]"><span class="font-bold text-ink-500 uppercase w-12">Data</span><input type="date" id="sigClienteDate" class="w-full outline-none border-b border-ink-200 focus:border-ink-900 font-medium bg-transparent"></div>
           </div>
 
         </div>
