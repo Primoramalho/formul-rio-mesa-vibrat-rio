@@ -378,59 +378,108 @@ function autoResizeTextarea(textarea) {
 }
 
 // ==========================================
-// COMPARTILHAMENTO VIA WHATSAPP (COM WEB SHARE API)
+// COMPARTILHAMENTO VIA LINK MÁGICO
 // ==========================================
-async function compartilharViaWhatsApp(tipo) {
+function compartilharViaWhatsApp(tipo) {
   const data = collectFormData();
   data.exportedAt = new Date().toISOString();
   data.status = tipo;
-  
-  const jsonStr = JSON.stringify(data, null, 2);
-  const fileName = `Comissionamento_${tipo === 'assinado' ? 'Assinado' : 'Para_Assinar'}_${data.header.eqCliente || 'Cliente'}.json`;
-  
-  // Cria o arquivo
-  const blob = new Blob([jsonStr], { type: 'application/json' });
-  const file = new File([blob], fileName, { type: 'application/json' });
 
-  // Verifica se o navegador suporta compartilhar arquivos (geralmente Chrome/Safari no celular)
-  if (navigator.canShare && navigator.canShare({ files: [file] })) {
-    try {
-      const linkApp = window.location.href;
-      let mensagem = tipo === 'pendente_assinatura' 
-        ? `Relatório para assinatura. Abra o link do app: ${linkApp}`
-        : `Relatório assinado em anexo.`;
-      
-      await navigator.share({
-        files: [file],
-        title: 'Comissionamento Alimentador',
-        text: mensagem
-      });
-      showToast('Arquivo compartilhado com sucesso!', 'success');
-    } catch (err) {
-      console.error('Erro ao compartilhar:', err);
-      showToast('Compartilhamento cancelado.', 'info');
-    }
+  // Remove anexos pesados (fotos/vídeos) para caber na URL
+  const dataParaLink = { ...data };
+  dataParaLink.attachments = {}; 
+
+  // Comprime o JSON
+  const jsonStr = JSON.stringify(dataParaLink);
+  const compressed = LZString.compressToEncodedURIComponent(jsonStr);
+
+  // Monta o link
+  const baseUrl = window.location.href.split('#')[0];
+  const linkAssinatura = `${baseUrl}#dados=${compressed}`;
+
+  // Gera a mensagem
+  let mensagem = "";
+
+  if (tipo === 'pendente_assinatura') {
+    mensagem = `Olá! Segue o relatório de comissionamento para sua assinatura.\n\n1. Clique no link abaixo.\n2. Revise as informações.\n3. Assine no campo do cliente e clique em "Concluir e Enviar".\n\n👉 ${linkAssinatura}`;
   } else {
-    // Fallback para Desktop (PC)
-    // No PC, o navegador não deixa anexar automaticamente. 
-    // Baixamos o arquivo e abrimos o WhatsApp.
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-
-    const linkApp = window.location.href;
-    let mensagem = tipo === 'pendente_assinatura' 
-      ? `Olá! Segue o relatório para assinatura.\n\n1. Abra o app: ${linkApp}\n2. Carregue o arquivo *${fileName}* que acabei de enviar.\n3. Assine e clique em "Devolver Assinado".`
-      : `Olá! Segue o relatório assinado em anexo.`;
-    
-    window.open(`https://wa.me/?text=${encodeURIComponent(mensagem)}`, '_blank');
-    showToast('Arquivo baixado! Anexe-o manualmente no WhatsApp.', 'warning');
+    mensagem = `Olá! Segue o relatório assinado.\n\n👉 ${linkAssinatura}`;
   }
+
+  // Abre o WhatsApp com a mensagem pronta
+  const urlWhatsApp = `https://wa.me/?text=${encodeURIComponent(mensagem)}`;
+  window.open(urlWhatsApp, '_blank');
+  
+  showToast('Link de assinatura gerado!', 'success');
+}
+
+function carregarDadosDaUrl() {
+  const hash = window.location.hash;
+  if (!hash || !hash.includes('dados=')) return false;
+
+  try {
+    const compressed = hash.split('dados=')[1];
+    const jsonStr = LZString.decompressFromEncodedURIComponent(compressed);
+    
+    if (jsonStr) {
+      const data = JSON.parse(jsonStr);
+      applyFormData(data);
+      
+      // Muda a interface para o Modo Cliente
+      ativarModoCliente();
+      return true;
+    }
+  } catch (e) {
+    console.error("Erro ao ler dados da URL:", e);
+    showToast('Link inválido ou corrompido.', 'error');
+  }
+  return false;
+}
+
+function ativarModoCliente() {
+  // Oculta o botão de gerar link (pois o cliente não precisa enviar para si mesmo)
+  const btnCompartilhar = document.querySelector('button[onclick="compartilharViaWhatsApp(\'pendente_assinatura\')"]');
+  if (btnCompartilhar) btnCompartilhar.style.display = 'none';
+  
+  // Muda o botão "Devolver Assinado" para a cor de destaque e gera o link de volta
+  const btnDevolver = document.querySelector('.btn-whatsapp');
+  if (btnDevolver) {
+    btnDevolver.innerHTML = '<i class="fa-solid fa-check"></i> <span>Concluir e Enviar</span>';
+    btnDevolver.onclick = () => concluirAssinaturaCliente();
+  }
+
+  // Desabilita a edição de campos que não devem ser alterados pelo cliente
+  document.querySelectorAll('#reportForm input, #reportForm textarea, #reportForm select').forEach(el => {
+    if (el.id !== 'sigClienteName' && el.id !== 'sigClienteCargo' && el.id !== 'sigClienteDate') {
+      el.setAttribute('readonly', true);
+      if (el.tagName === 'TEXTAREA' || el.type === 'text' || el.type === 'date') {
+        el.style.backgroundColor = '#f6f7f9'; // Feedback visual de bloqueio
+      }
+    }
+  });
+
+  // Foca no campo de assinatura do cliente
+  window.scrollTo(0, document.getElementById('canvas_sigCliente').getBoundingClientRect().top - 100);
+  showToast('Revise os dados e assine abaixo.', 'info');
+}
+
+function concluirAssinaturaCliente() {
+  // Coleta os dados atuais (que já vieram da URL + a assinatura feita agora)
+  const data = collectFormData();
+  data.status = 'assinado';
+  
+  // Gera um novo link com a assinatura inclusa
+  const jsonStr = JSON.stringify(data);
+  const compressed = LZString.compressToEncodedURIComponent(jsonStr);
+  const baseUrl = window.location.href.split('#')[0];
+  const linkAssinado = `${baseUrl}#dados=${compressed}`;
+
+  // Abre o WhatsApp para o cliente enviar o link de volta ao técnico
+  const mensagem = `Olá! Documento assinado com sucesso.\n\nAqui está o link com o registro da assinatura:\n👉 ${linkAssinado}`;
+  const urlWhatsApp = `https://wa.me/?text=${encodeURIComponent(mensagem)}`;
+  window.open(urlWhatsApp, '_blank');
+  
+  showToast('Assinatura concluída! Envie o link para o técnico.', 'success');
 }
 
 // ==========================================
@@ -691,23 +740,35 @@ function clearForm() {
 }
 
 window.onload = () => {
-  renderChecklists();
-  setTimeout(() => {
-    initCanvas('sigTecnico');
-    initCanvas('sigCliente');
-    loadFormState();
-    
-    const sec5Ta = document.getElementById('sec5Comentario');
-    const sec5Print = document.getElementById('sec5ComentarioPrint');
-    if (sec5Ta) {
-      autoResizeTextarea(sec5Ta);
-      sec5Ta.addEventListener('input', () => {
+  // Verifica se há dados na URL (Modo Cliente)
+  const isModoCliente = carregarDadosDaUrl();
+  
+  if (!isModoCliente) {
+    // Modo Técnico normal
+    renderChecklists();
+    setTimeout(() => {
+      initCanvas('sigTecnico');
+      initCanvas('sigCliente');
+      loadFormState(); // Carrega do localStorage
+      
+      const sec5Ta = document.getElementById('sec5Comentario');
+      const sec5Print = document.getElementById('sec5ComentarioPrint');
+      if (sec5Ta) {
         autoResizeTextarea(sec5Ta);
-        if (sec5Print) sec5Print.textContent = sec5Ta.value;
-      });
-    }
-    
-  }, 100);
+        sec5Ta.addEventListener('input', () => {
+          autoResizeTextarea(sec5Ta);
+          if (sec5Print) sec5Print.textContent = sec5Ta.value;
+        });
+      }
+    }, 100);
+  } else {
+    // Modo Cliente (dados vieram da URL)
+    renderChecklists(); // Renderiza os checklists visualmente
+    setTimeout(() => {
+      initCanvas('sigTecnico');
+      initCanvas('sigCliente');
+    }, 100);
+  }
   
   const form = document.getElementById('reportForm');
   form.addEventListener('change', () => saveFormState(false));
