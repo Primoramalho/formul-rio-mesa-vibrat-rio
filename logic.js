@@ -378,26 +378,23 @@ function autoResizeTextarea(textarea) {
 }
 
 // ==========================================
-// COMPARTILHAMENTO VIA LINK MÁGICO
+// COMPARTILHAMENTO VIA LINK MÁGICO (COM ? EM VEZ DE #)
 // ==========================================
 function compartilharViaWhatsApp(tipo) {
   const data = collectFormData();
   data.exportedAt = new Date().toISOString();
   data.status = tipo;
 
-  // Remove anexos pesados (fotos/vídeos) para caber na URL
   const dataParaLink = { ...data };
   dataParaLink.attachments = {}; 
 
-  // Comprime o JSON
   const jsonStr = JSON.stringify(dataParaLink);
   const compressed = LZString.compressToEncodedURIComponent(jsonStr);
 
-  // Monta o link
-  const baseUrl = window.location.href.split('#')[0];
-  const linkAssinatura = `${baseUrl}#dados=${compressed}`;
+  // USA ?dados= EM VEZ DE #dados=
+  const baseUrl = window.location.href.split('?')[0].split('#')[0];
+  const linkAssinatura = `${baseUrl}?dados=${compressed}`;
 
-  // Gera a mensagem
   let mensagem = "";
 
   if (tipo === 'pendente_assinatura') {
@@ -406,7 +403,6 @@ function compartilharViaWhatsApp(tipo) {
     mensagem = `Olá! Segue o relatório assinado.\n\n👉 ${linkAssinatura}`;
   }
 
-  // Abre o WhatsApp com a mensagem pronta
   const urlWhatsApp = `https://wa.me/?text=${encodeURIComponent(mensagem)}`;
   window.open(urlWhatsApp, '_blank');
   
@@ -414,16 +410,30 @@ function compartilharViaWhatsApp(tipo) {
 }
 
 function carregarDadosDaUrl() {
-  const hash = window.location.hash;
-  if (!hash || !hash.includes('dados=')) return false;
+  // Verifica se a URL tem o parâmetro ?dados= ou #dados=
+  const urlParams = new URLSearchParams(window.location.search);
+  let compressed = urlParams.get('dados');
+  
+  if (!compressed && window.location.hash && window.location.hash.includes('dados=')) {
+    compressed = window.location.hash.split('dados=')[1];
+  }
+
+  if (!compressed) return false;
 
   try {
-    // Pega tudo o que vem depois de #dados=
-    const compressed = hash.split('dados=')[1];
+    console.log("Dados encontrados na URL. Descomprimindo...");
     const jsonStr = LZString.decompressFromEncodedURIComponent(compressed);
     
     if (jsonStr) {
       const data = JSON.parse(jsonStr);
+      
+      // Salva no localStorage temporariamente para garantir
+      localStorage.setItem(STORAGE_KEY, jsonStr);
+
+      // Como os checklists são criados via JS, precisamos criá-los primeiro
+      renderChecklists();
+      
+      // Aplica os dados
       applyFormData(data);
       
       // Muda a interface para o Modo Cliente
@@ -438,46 +448,43 @@ function carregarDadosDaUrl() {
 }
 
 function ativarModoCliente() {
-  // Oculta o botão de gerar link (pois o cliente não precisa enviar para si mesmo)
   const btnCompartilhar = document.querySelector('button[onclick="compartilharViaWhatsApp(\'pendente_assinatura\')"]');
   if (btnCompartilhar) btnCompartilhar.style.display = 'none';
   
-  // Muda o botão "Devolver Assinado" para a cor de destaque e gera o link de volta
   const btnDevolver = document.querySelector('.btn-whatsapp');
   if (btnDevolver) {
     btnDevolver.innerHTML = '<i class="fa-solid fa-check"></i> <span>Concluir e Enviar</span>';
     btnDevolver.onclick = () => concluirAssinaturaCliente();
   }
 
-  // Desabilita a edição de campos que não devem ser alterados pelo cliente
   document.querySelectorAll('#reportForm input, #reportForm textarea, #reportForm select').forEach(el => {
     if (el.id !== 'sigClienteName' && el.id !== 'sigClienteCargo' && el.id !== 'sigClienteDate') {
       el.setAttribute('readonly', true);
       if (el.tagName === 'TEXTAREA' || el.type === 'text' || el.type === 'date') {
-        el.style.backgroundColor = '#f6f7f9'; // Feedback visual de bloqueio
+        el.style.backgroundColor = '#f6f7f9';
       }
     }
   });
 
-  // Foca no campo de assinatura do cliente
   setTimeout(() => {
-    window.scrollTo(0, document.getElementById('canvas_sigCliente').getBoundingClientRect().top - 100);
+    const canvasCliente = document.getElementById('canvas_sigCliente');
+    if (canvasCliente) {
+      window.scrollTo(0, canvasCliente.getBoundingClientRect().top - 100);
+    }
     showToast('Revise os dados e assine abaixo.', 'info');
   }, 500);
 }
 
 function concluirAssinaturaCliente() {
-  // Coleta os dados atuais (que já vieram da URL + a assinatura feita agora)
   const data = collectFormData();
   data.status = 'assinado';
   
-  // Gera um novo link com a assinatura inclusa
   const jsonStr = JSON.stringify(data);
   const compressed = LZString.compressToEncodedURIComponent(jsonStr);
-  const baseUrl = window.location.href.split('#')[0];
-  const linkAssinado = `${baseUrl}#dados=${compressed}`;
+  
+  const baseUrl = window.location.href.split('?')[0].split('#')[0];
+  const linkAssinado = `${baseUrl}?dados=${compressed}`;
 
-  // Abre o WhatsApp para o cliente enviar o link de volta ao técnico
   const mensagem = `Olá! Documento assinado com sucesso.\n\nAqui está o link com o registro da assinatura:\n👉 ${linkAssinado}`;
   const urlWhatsApp = `https://wa.me/?text=${encodeURIComponent(mensagem)}`;
   window.open(urlWhatsApp, '_blank');
@@ -743,7 +750,7 @@ function clearForm() {
 }
 
 window.onload = () => {
-  // 1. Verifica imediatamente se há dados na URL (Modo Cliente)
+  // Verifica se há dados na URL (Modo Cliente)
   const isModoCliente = carregarDadosDaUrl();
   
   if (!isModoCliente) {
@@ -765,25 +772,37 @@ window.onload = () => {
       }
     }, 100);
   } else {
-    // Modo Cliente (dados vieram da URL)
-    // O applyFormData já preencheu os inputs. Precisamos apenas renderizar os checklists e os canvases.
-    renderChecklists(); 
+    // Modo Cliente: O carregarDadosDaUrl já fez todo o trabalho (renderChecklists + applyFormData + ativarModoCliente)
     setTimeout(() => {
       initCanvas('sigTecnico');
       initCanvas('sigCliente');
       
-      // Re-aplica os dados nos checklists (pois eles acabaram de ser renderizados)
-      // (Esta parte é um workaround porque os checklists são criados via JS)
-      const hash = window.location.hash;
-      if (hash && hash.includes('dados=')) {
-         try {
-           const compressed = hash.split('dados=')[1];
-           const jsonStr = LZString.decompressFromEncodedURIComponent(compressed);
-           if (jsonStr) applyFormData(JSON.parse(jsonStr));
-         } catch(e) {}
+      // Re-aplica as assinaturas após inicializar o canvas
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        try {
+          const data = JSON.parse(raw);
+          if (data.signatures) {
+            Object.keys(data.signatures).forEach(sigId => {
+              if (data.signatures[sigId]) {
+                 const canvasEl = document.getElementById(`canvas_${sigId}`);
+                 if (canvasEl) {
+                    const ctx = canvasEl.getContext('2d');
+                    const img = new Image();
+                    img.onload = () => {
+                      const dpr = window.devicePixelRatio || 1;
+                      const rect = canvasEl.getBoundingClientRect();
+                      ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+                      ctx.drawImage(img, 0, 0, rect.width, rect.height);
+                    };
+                    img.src = data.signatures[sigId];
+                 }
+              }
+            });
+          }
+        } catch(e) {}
       }
-
-    }, 300); // Um pouco mais de tempo para garantir que os checklists renderizaram
+    }, 300);
   }
   
   const form = document.getElementById('reportForm');
