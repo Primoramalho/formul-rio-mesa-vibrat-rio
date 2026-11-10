@@ -40,15 +40,12 @@
   <!-- CSS Customizado -->
   <link rel="stylesheet" href="style.css">
 
-    <!-- Firebase SDK v13.2.0 -->
+  <!-- Firebase SDK v13.2.0 -->
   <script type="module">
-    // 1. Importa o Firebase principal
     import { initializeApp } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-app.js";
-    
-    // 2. Importa o FIREsTORE (O Banco de Dados)
     import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-firestore.js";
 
-    // Suas credenciais
+    // Credenciais do SEU projeto
     const firebaseConfig = {
       apiKey: "AIzaSyA8Sbmktltq56k_eCC0SLXSMLQOHHqQ7Ss",
       authDomain: "formulario-cwr-alimentador.firebaseapp.com",
@@ -59,13 +56,10 @@
       measurementId: "G-RWXRLR529H"
     };
 
-    // Inicializa
     const app = initializeApp(firebaseConfig);
-    
-    // Ativa o banco de dados
     const db = getFirestore(app);
 
-    // ESSA É A LINHA MÁGICA! Ela entrega o banco para o logic.js
+    // Deixa o banco de dados visível para o script logic.js
     window.firebaseDB = { db, doc, setDoc, getDoc, updateDoc };
   </script>
 </head>
