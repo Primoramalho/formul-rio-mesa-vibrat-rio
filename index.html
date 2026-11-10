@@ -37,22 +37,15 @@
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-  <!-- Biblioteca de Compressão para URL -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
-
   <!-- CSS Customizado -->
   <link rel="stylesheet" href="style.css">
-  
-  <!--firebase-->
+
+  <!-- Firebase SDK v13.2.0 -->
   <script type="module">
-    // Import the functions you need from the SDKs you need
     import { initializeApp } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-analytics.js";
-    // TODO: Add SDKs for Firebase products that you want to use
-    // https://firebase.google.com/docs/web/setup#available-libraries
-  
-    // Your web app's Firebase configuration
-    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+    import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-firestore.js";
+
+    // Credenciais do SEU projeto
     const firebaseConfig = {
       apiKey: "AIzaSyA8Sbmktltq56k_eCC0SLXSMLQOHHqQ7Ss",
       authDomain: "formulario-cwr-alimentador.firebaseapp.com",
@@ -62,13 +55,13 @@
       appId: "1:990647015687:web:210039819b3ebaf824cda2",
       measurementId: "G-RWXRLR529H"
     };
-  
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
-  </script>
 
-  
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Deixa o banco de dados visível para o script logic.js
+    window.firebaseDB = { db, doc, setDoc, getDoc, updateDoc };
+  </script>
 </head>
 <body class="bg-ink-100 min-h-screen text-ink-800 antialiased">
 
