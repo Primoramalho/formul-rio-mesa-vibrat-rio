@@ -378,71 +378,110 @@ function autoResizeTextarea(textarea) {
 }
 
 // ==========================================
-// COMPARTILHAMENTO VIA FIREBASE (LINK CURTO)
+// BANCO DE DADOS LOCAL (IndexedDB)
+// ==========================================
+function abrirDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open("MetsoDB", 1);
+    request.onupgradeneeded = e => e.target.result.createObjectStore("fotos");
+    request.onsuccess = e => resolve(e.target.result);
+    request.onerror = reject;
+  });
+}
+
+async function salvarFotosLocalmente(docId, fotos) {
+  if (!fotos || Object.keys(fotos).length === 0) return;
+  const db = await abrirDB();
+  const tx = db.transaction("fotos", "readwrite");
+  tx.objectStore("fotos").put(fotos, docId);
+}
+
+async function recuperarFotosLocalmente(docId) {
+  const db = await abrirDB();
+  return new Promise(resolve => {
+    const request = db.transaction("fotos", "readonly").objectStore("fotos").get(docId);
+    request.onsuccess = () => resolve(request.result || null);
+  });
+}
+
+// ==========================================
+// COMPARTILHAMENTO VIA FIREBASE
 // ==========================================
 async function compartilharViaWhatsApp(tipo) {
   const data = collectFormData();
   data.exportedAt = new Date().toISOString();
   data.status = tipo;
 
-  // CORREÇÃO: Remove os anexos pesados (fotos/vídeos) para não estourar o Firestore
-  data.attachments = {}; 
-
   const docId = 'doc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
 
   try {
     const { db, doc, setDoc } = window.firebaseDB;
 
+    // SEPARAÇÃO MÁGICA:
+    // 1. Guarda as fotos pesadas no seu navegador (IndexedDB)
+    await salvarFotosLocalmente(docId, data.attachments);
+
+    // 2. Remove as fotos do documento que vai para o Firebase
+    data.attachments = {};
+
+    // 3. Salva apenas textos e assinaturas no Firebase
     await setDoc(doc(db, "documentos", docId), data);
 
     const baseUrl = window.location.href.split('?')[0].split('#')[0];
-    const linkAssinatura = `${baseUrl}?id=${docId}`;
+    const linkAssinatura = `${baseUrl}?id=${docId}&modo=assinatura`;
 
-    let mensagem = "";
-    if (tipo === 'pendente_assinatura') {
-      mensagem = `Olá! Segue o relatório de comissionamento para sua assinatura.\n\n1. Clique no link abaixo.\n2. Revise as informações.\n3. Assine no campo do cliente e clique em "Concluir e Enviar".\n\n👉 ${linkAssinatura}`;
-    } else {
-      mensagem = `Olá! Segue o relatório assinado.\n\n👉 ${linkAssinatura}`;
-    }
-
+    let mensagem = `Olá! Segue o relatório de comissionamento para sua assinatura.\n\n👉 ${linkAssinatura}`;
     const urlWhatsApp = `https://wa.me/?text=${encodeURIComponent(mensagem)}`;
     window.open(urlWhatsApp, '_blank');
     
-    showToast('Link de assinatura gerado com sucesso!', 'success');
+    showToast('Link gerado! As fotos ficaram salvas no seu dispositivo.', 'success');
   } catch (error) {
     console.error("Erro ao salvar no Firebase:", error);
-    showToast('Erro ao conectar com o servidor. Verifique sua internet.', 'error');
+    showToast('Erro ao conectar com o servidor.', 'error');
   }
 }
 
 async function carregarDadosDaUrl() {
   const urlParams = new URLSearchParams(window.location.search);
   const docId = urlParams.get('id');
+  const modo = urlParams.get('modo');
 
   if (!docId) return false;
 
   try {
     const { db, doc, getDoc } = window.firebaseDB;
-    
     const docRef = doc(db, "documentos", docId);
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
       const data = docSnap.data();
       
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      // Se for retorno do técnico, busca as fotos no IndexedDB local
+      if (modo !== 'assinatura') {
+        const fotosLocais = await recuperarFotosLocalmente(docId);
+        if (fotosLocais) {
+          data.attachments = fotosLocais;
+        }
+      } else {
+        data.attachments = {}; // Cliente não vê fotos
+      }
 
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
       renderChecklists();
       applyFormData(data);
       
-      ativarModoCliente(docId);
+      if (modo === 'assinatura') {
+        ativarModoCliente(docId);
+      } else {
+        showToast('Documento retornado e fotos recuperadas!', 'success');
+      }
       return true;
     } else {
       showToast('Documento não encontrado no servidor.', 'error');
     }
   } catch (e) {
     console.error("Erro ao ler dados do Firebase:", e);
-    showToast('Link inválido ou sem conexão. Peça ao técnico para gerar novamente.', 'error');
+    showToast('Link inválido ou sem conexão.', 'error');
   }
   return false;
 }
@@ -484,7 +523,6 @@ async function concluirAssinaturaCliente(docId) {
     
     const docRef = doc(db, "documentos", docId);
     
-    // Atualiza APENAS a assinatura e os campos de texto do cliente
     await updateDoc(docRef, {
       'signatures.sigCliente': data.signatures.sigCliente,
       'signatures.sigClienteName': data.signatures.sigClienteName,
@@ -495,7 +533,7 @@ async function concluirAssinaturaCliente(docId) {
     });
 
     const baseUrl = window.location.href.split('?')[0].split('#')[0];
-    const linkAssinado = `${baseUrl}?id=${docId}`;
+    const linkAssinado = `${baseUrl}?id=${docId}&modo=retorno`;
 
     const mensagem = `Olá! Documento assinado com sucesso.\n\nAqui está o link com o registro da assinatura:\n👉 ${linkAssinado}`;
     const urlWhatsApp = `https://wa.me/?text=${encodeURIComponent(mensagem)}`;
@@ -534,9 +572,7 @@ function collectFormData() {
       regBumpX: document.getElementById('regBumpX')?.value || '',
       regBumpY: document.getElementById('regBumpY')?.value || '',
       regBumpZ: document.getElementById('regBumpZ')?.value || '',
-      
       regAmpMetodo: document.getElementById('regAmpMetodo')?.value || '',
-      
       regAmpSC_AD: document.getElementById('regAmpSC_AD')?.value || '',
       regAmpSC_AE: document.getElementById('regAmpSC_AE')?.value || '',
       regAmpSC_DD: document.getElementById('regAmpSC_DD')?.value || '',
@@ -569,7 +605,6 @@ function collectFormData() {
     signatures: {
       sigTecnico: signatures.sigTecnico,
       sigCliente: signatures.sigCliente,
-      // CORREÇÃO: Adicionando Nome, Cargo e Data
       sigTecnicoName: document.getElementById('sigTecnicoName')?.value || '',
       sigTecnicoCargo: document.getElementById('sigTecnicoCargo')?.value || '',
       sigTecnicoDate: document.getElementById('sigTecnicoDate')?.value || '',
@@ -775,16 +810,14 @@ function clearForm() {
 }
 
 window.onload = async () => {
-  // Verifica se há dados na URL (Modo Cliente)
   const isModoCliente = await carregarDadosDaUrl();
   
   if (!isModoCliente) {
-    // Modo Técnico normal
     renderChecklists();
     setTimeout(() => {
       initCanvas('sigTecnico');
       initCanvas('sigCliente');
-      loadFormState(); // Carrega do localStorage
+      loadFormState();
       
       const sec5Ta = document.getElementById('sec5Comentario');
       const sec5Print = document.getElementById('sec5ComentarioPrint');
@@ -797,12 +830,10 @@ window.onload = async () => {
       }
     }, 100);
   } else {
-    // Modo Cliente: O carregarDadosDaUrl já fez todo o trabalho
     setTimeout(() => {
       initCanvas('sigTecnico');
       initCanvas('sigCliente');
       
-      // Re-aplica as assinaturas após inicializar o canvas
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         try {
