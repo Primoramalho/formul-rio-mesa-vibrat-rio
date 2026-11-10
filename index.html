@@ -169,7 +169,7 @@
       </div>
 
       <!-- 1. VERIFICAÇÕES ANTES DA PARTIDA -->
-      <div class="border border-ink-200 overflow-hidden page-break">
+      <div class="border border-ink-200 overflow-hidden">
         <div class="section-head text-white font-black text-[11px] px-4 py-2.5 uppercase flex items-center gap-2.5">
           <span class="w-1 h-3 bg-metso-500"></span>
           <span>1 - Verificações Antes da Partida</span>
@@ -189,7 +189,7 @@
       </div>
 
       <!-- 2. VERIFICAÇÕES EM OPERAÇÃO -->
-      <div class="border border-ink-200 overflow-hidden page-break">
+      <div class="border border-ink-200 overflow-hidden">
         <div class="section-head text-white font-black text-[11px] px-4 py-2.5 uppercase flex items-center gap-2.5">
           <span class="w-1 h-3 bg-metso-500"></span>
           <span>2 - Verificações em Operação</span>
@@ -229,14 +229,14 @@
       </div>
 
       <!-- 4. REGISTROS -->
-      <div class="border border-ink-200 overflow-hidden page-break">
+      <div class="border border-ink-200 overflow-hidden">
         <div class="section-head text-white font-black text-[11px] px-4 py-2.5 uppercase flex items-center gap-2.5">
           <span class="w-1 h-3 bg-metso-500"></span>
           <span>4 - Registros</span>
         </div>
         <div class="p-4 bg-white space-y-4 text-xs">
           
-          <div class="flex flex-col sm:flex-row sm:items-center gap-2 p-2 bg-ink-50 rounded border border-ink-200">
+          <div class="reg-item flex flex-col sm:flex-row sm:items-center gap-2 p-2 bg-ink-50 rounded border border-ink-200">
             <div class="w-full sm:w-1/3 font-bold text-ink-700">4.1. Altura de molas (mm):</div>
             <div class="flex-grow grid grid-cols-2 sm:grid-cols-4 gap-2">
               <div class="flex items-center gap-1"><span class="text-[10px] font-bold text-ink-500">AD</span><input type="text" id="regMolaAD" class="field-input w-full border-b border-ink-300 px-1 py-0.5 outline-none focus:border-ink-900 bg-transparent"></div>
@@ -253,7 +253,7 @@
             </div>
           </div>
 
-          <div class="flex flex-col sm:flex-row sm:items-center gap-2 p-2 bg-ink-50 rounded border border-ink-200">
+          <div class="reg-item flex flex-col sm:flex-row sm:items-center gap-2 p-2 bg-ink-50 rounded border border-ink-200">
             <div class="w-full sm:w-1/3 font-bold text-ink-700">4.2. Mecanismos (Tipo / Config / %):</div>
             <div class="flex-grow flex flex-wrap items-center gap-2">
               <input type="text" id="regMecTipo" class="field-input w-full sm:w-1/3 border-b border-ink-300 px-1 py-0.5 outline-none focus:border-ink-900 bg-transparent" placeholder="Tipo">
@@ -269,7 +269,7 @@
             </div>
           </div>
 
-          <div class="flex flex-col sm:flex-row sm:items-center gap-2 p-2 bg-ink-50 rounded border border-ink-200">
+          <div class="reg-item flex flex-col sm:flex-row sm:items-center gap-2 p-2 bg-ink-50 rounded border border-ink-200">
             <div class="w-full sm:w-1/3 font-bold text-ink-700">4.3. Bump Test:</div>
             <div class="flex-grow grid grid-cols-3 gap-2">
               <div class="flex items-center gap-1"><span class="text-[10px] font-bold text-ink-500">X</span><input type="text" id="regBumpX" class="field-input w-full border-b border-ink-300 px-1 py-0.5 outline-none focus:border-ink-900 bg-transparent"></div>
@@ -285,7 +285,7 @@
             </div>
           </div>
 
-          <div class="p-2 bg-ink-50 rounded border border-ink-200 space-y-3">
+          <div class="reg-item p-2 bg-ink-50 rounded border border-ink-200 space-y-3">
             <div class="flex flex-col sm:flex-row sm:items-center gap-2">
               <div class="font-bold text-ink-700 w-full sm:w-1/3">4.4. Amplitudes:</div>
               <div class="flex-grow flex items-center gap-2">
@@ -323,7 +323,7 @@
             </div>
           </div>
 
-          <div class="flex flex-col sm:flex-row sm:items-center gap-2 p-2 bg-ink-50 rounded border border-ink-200">
+          <div class="reg-item flex flex-col sm:flex-row sm:items-center gap-2 p-2 bg-ink-50 rounded border border-ink-200">
             <div class="w-full sm:w-1/3 font-bold text-ink-700">4.5. Aceleração:</div>
             <div class="flex-grow">
               <input type="text" id="regAceleracao" class="field-input w-full border-b border-ink-300 px-1 py-0.5 outline-none focus:border-ink-900 bg-transparent">
@@ -339,7 +339,7 @@
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             
-            <div class="p-2 bg-ink-50 rounded border border-ink-200 space-y-2">
+            <div class="reg-item p-2 bg-ink-50 rounded border border-ink-200 space-y-2">
               <div class="font-bold text-ink-700">4.6. Motor 1</div>
               <div class="flex items-center gap-2">
                 <span class="text-[10px] font-bold text-ink-500 w-20">In plena carga</span>
@@ -361,7 +361,7 @@
               </div>
             </div>
 
-            <div class="p-2 bg-ink-50 rounded border border-ink-200 space-y-2">
+            <div class="reg-item p-2 bg-ink-50 rounded border border-ink-200 space-y-2">
               <div class="font-bold text-ink-700">4.7. Motor 2</div>
               <div class="flex items-center gap-2">
                 <span class="text-[10px] font-bold text-ink-500 w-20">In plena carga</span>
@@ -385,7 +385,7 @@
 
           </div>
 
-          <div class="p-2 bg-ink-50 rounded border border-ink-200 space-y-2">
+          <div class="reg-item p-2 bg-ink-50 rounded border border-ink-200 space-y-2">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div class="font-bold text-ink-700">4.8. Temperaturas após horas:</div>
               <div class="flex items-center gap-2">
@@ -420,7 +420,7 @@
       </div>
 
       <!-- 5. TERMO DE ENTREGA TÉCNICA -->
-      <div class="border border-ink-200 overflow-hidden page-break">
+      <div class="border border-ink-200 overflow-hidden">
         <div class="section-head text-white font-black text-[11px] px-4 py-2.5 uppercase flex items-center gap-2.5">
           <span class="w-1 h-3 bg-metso-500"></span>
           <span>5 - Termo de Entrega Técnica</span>
@@ -468,7 +468,7 @@
       </div>
 
       <!-- 6. ROTEIRO DE MANUTENÇÃO INICIAL -->
-      <div class="border border-ink-200 overflow-hidden page-break">
+      <div class="border border-ink-200 overflow-hidden">
         <div class="section-head text-white font-black text-[11px] px-4 py-2.5 uppercase flex items-center gap-2.5">
           <span class="w-1 h-3 bg-metso-500"></span>
           <span>6 - Roteiro de Manutenção Inicial</span>
@@ -510,8 +510,8 @@
         </div>
       </div>
 
-      <!-- 7. ASSINATURAS -->
-      <div class="border border-ink-200 overflow-hidden page-break">
+      <!-- 7. ASSINATURAS (única seção com controle condicional de quebra) -->
+      <div class="secao-assinaturas border border-ink-200 overflow-hidden">
         <div class="section-head text-white font-black text-[11px] px-4 py-2.5 uppercase flex items-center gap-2.5">
           <span class="w-1 h-3 bg-metso-500"></span>
           <span>7 - Assinaturas</span>
@@ -519,71 +519,33 @@
         <div class="p-4 bg-white grid grid-cols-1 sm:grid-cols-2 gap-6">
           
           <!-- Técnico -->
-          <div class="border border-ink-200 bg-ink-25 p-4 flex flex-col signature-wrap">
-            <div class="relative w-full h-[120px] flex items-end">
-              <canvas id="canvas_sigTecnico" class="signature-canvas absolute inset-0 border-none bg-transparent z-10 w-full h-full"></canvas>
-              <img id="img_sigTecnico" src="" class="signature-img-print absolute inset-0 w-full h-full object-contain" alt="Assinatura Técnico">
-              
-              <!-- BOTÃO LIMPAR ASSINATURA (Técnico) -->
-              <button type="button" onclick="clearSignature('sigTecnico')" 
-                      class="no-print absolute top-1 right-1 z-20 bg-white/90 hover:bg-metso-500 text-ink-600 hover:text-white border border-ink-200 hover:border-metso-500 rounded-full w-7 h-7 flex items-center justify-center text-[11px] shadow-sm transition-colors" 
-                      title="Limpar assinatura">
-                <i class="fa-solid fa-eraser"></i>
-              </button>
-
-              <div class="w-full border-t-2 border-ink-900 text-center text-[10px] font-black uppercase pt-2 pb-2 text-ink-900 relative z-0">
-                Técnico Metso
-              </div>
+          <div class="border border-ink-200 bg-ink-25 p-3 flex flex-col gap-2.5 signature-wrap">
+            <div class="relative w-full">
+              <canvas id="canvas_sigTecnico" class="signature-canvas border border-ink-200"></canvas>
+              <img id="img_sigTecnico" src="" class="signature-img-print" alt="Assinatura Técnico">
             </div>
-            
-            <div class="mt-4 space-y-2 text-[11px]">
-              <div class="flex items-center gap-2">
-                <span class="font-bold text-ink-600 uppercase w-12 shrink-0">Nome</span>
-                <input type="text" id="sigTecnicoName" class="input-assinatura w-full outline-none border-b border-ink-300 focus:border-ink-900 font-medium bg-transparent" placeholder="Nome do Técnico">
-              </div>
-              <div class="flex items-center gap-2">
-                <span class="font-bold text-ink-600 uppercase w-12 shrink-0">Cargo</span>
-                <input type="text" id="sigTecnicoCargo" class="input-assinatura w-full outline-none border-b border-ink-300 focus:border-ink-900 font-medium bg-transparent" placeholder="Cargo / Função">
-              </div>
-              <div class="flex items-center gap-2">
-                <span class="font-bold text-ink-600 uppercase w-12 shrink-0">Data</span>
-                <input type="date" id="sigTecnicoDate" class="input-assinatura w-full outline-none border-b border-ink-300 focus:border-ink-900 font-medium bg-transparent">
-              </div>
+            <div class="flex items-center justify-between mt-1">
+              <span class="text-[10px] text-ink-500 uppercase font-bold">Técnico Metso</span>
+              <button type="button" onclick="clearSignature('sigTecnico')" class="text-[9px] text-metso-500 hover:text-metso-700 font-bold uppercase no-print"><i class="fa-solid fa-eraser"></i> Limpar</button>
             </div>
+            <div class="flex items-center gap-2 text-[10px]"><span class="font-bold text-ink-500 uppercase w-12">Nome</span><input type="text" id="sigTecnicoName" class="w-full outline-none border-b border-ink-200 focus:border-ink-900 font-medium bg-transparent" placeholder="Nome do Técnico"></div>
+            <div class="flex items-center gap-2 text-[10px]"><span class="font-bold text-ink-500 uppercase w-12">Cargo</span><input type="text" id="sigTecnicoCargo" class="w-full outline-none border-b border-ink-200 focus:border-ink-900 font-medium bg-transparent" placeholder="Cargo / Função"></div>
+            <div class="flex items-center gap-2 text-[10px]"><span class="font-bold text-ink-500 uppercase w-12">Data</span><input type="date" id="sigTecnicoDate" class="w-full outline-none border-b border-ink-200 focus:border-ink-900 font-medium bg-transparent"></div>
           </div>
 
           <!-- Cliente -->
-          <div class="border border-ink-200 bg-ink-25 p-4 flex flex-col signature-wrap">
-            <div class="relative w-full h-[120px] flex items-end">
-              <canvas id="canvas_sigCliente" class="signature-canvas absolute inset-0 border-none bg-transparent z-10 w-full h-full"></canvas>
-              <img id="img_sigCliente" src="" class="signature-img-print absolute inset-0 w-full h-full object-contain" alt="Assinatura Cliente">
-              
-              <!-- BOTÃO LIMPAR ASSINATURA (Cliente) -->
-              <button type="button" onclick="clearSignature('sigCliente')" 
-                      class="no-print absolute top-1 right-1 z-20 bg-white/90 hover:bg-metso-500 text-ink-600 hover:text-white border border-ink-200 hover:border-metso-500 rounded-full w-7 h-7 flex items-center justify-center text-[11px] shadow-sm transition-colors" 
-                      title="Limpar assinatura">
-                <i class="fa-solid fa-eraser"></i>
-              </button>
-
-              <div class="w-full border-t-2 border-ink-900 text-center text-[10px] font-black uppercase pt-2 pb-2 text-ink-900 relative z-0">
-                Cliente
-              </div>
+          <div class="border border-ink-200 bg-ink-25 p-3 flex flex-col gap-2.5 signature-wrap">
+            <div class="relative w-full">
+              <canvas id="canvas_sigCliente" class="signature-canvas border border-ink-200"></canvas>
+              <img id="img_sigCliente" src="" class="signature-img-print" alt="Assinatura Cliente">
             </div>
-            
-            <div class="mt-4 space-y-2 text-[11px]">
-              <div class="flex items-center gap-2">
-                <span class="font-bold text-ink-600 uppercase w-12 shrink-0">Nome</span>
-                <input type="text" id="sigClienteName" class="input-assinatura w-full outline-none border-b border-ink-300 focus:border-ink-900 font-medium bg-transparent" placeholder="Nome do Representante">
-              </div>
-              <div class="flex items-center gap-2">
-                <span class="font-bold text-ink-600 uppercase w-12 shrink-0">Cargo</span>
-                <input type="text" id="sigClienteCargo" class="input-assinatura w-full outline-none border-b border-ink-300 focus:border-ink-900 font-medium bg-transparent" placeholder="Cargo / Função">
-              </div>
-              <div class="flex items-center gap-2">
-                <span class="font-bold text-ink-600 uppercase w-12 shrink-0">Data</span>
-                <input type="date" id="sigClienteDate" class="input-assinatura w-full outline-none border-b border-ink-300 focus:border-ink-900 font-medium bg-transparent">
-              </div>
+            <div class="flex items-center justify-between mt-1">
+              <span class="text-[10px] text-ink-500 uppercase font-bold">Cliente</span>
+              <button type="button" onclick="clearSignature('sigCliente')" class="text-[9px] text-metso-500 hover:text-metso-700 font-bold uppercase no-print"><i class="fa-solid fa-eraser"></i> Limpar</button>
             </div>
+            <div class="flex items-center gap-2 text-[10px]"><span class="font-bold text-ink-500 uppercase w-12">Nome</span><input type="text" id="sigClienteName" class="w-full outline-none border-b border-ink-200 focus:border-ink-900 font-medium bg-transparent" placeholder="Nome do Representante"></div>
+            <div class="flex items-center gap-2 text-[10px]"><span class="font-bold text-ink-500 uppercase w-12">Cargo</span><input type="text" id="sigClienteCargo" class="w-full outline-none border-b border-ink-200 focus:border-ink-900 font-medium bg-transparent" placeholder="Cargo / Função"></div>
+            <div class="flex items-center gap-2 text-[10px]"><span class="font-bold text-ink-500 uppercase w-12">Data</span><input type="date" id="sigClienteDate" class="w-full outline-none border-b border-ink-200 focus:border-ink-900 font-medium bg-transparent"></div>
           </div>
 
         </div>
