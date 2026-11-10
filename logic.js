@@ -378,65 +378,31 @@ function autoResizeTextarea(textarea) {
 }
 
 // ==========================================
-// BANCO DE DADOS LOCAL (IndexedDB)
-// ==========================================
-function abrirDB() {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open("MetsoDB", 1);
-    request.onupgradeneeded = e => e.target.result.createObjectStore("fotos");
-    request.onsuccess = e => resolve(e.target.result);
-    request.onerror = reject;
-  });
-}
-
-async function salvarFotosLocalmente(docId, fotos) {
-  if (!fotos || Object.keys(fotos).length === 0) return;
-  const db = await abrirDB();
-  const tx = db.transaction("fotos", "readwrite");
-  tx.objectStore("fotos").put(fotos, docId);
-}
-
-async function recuperarFotosLocalmente(docId) {
-  const db = await abrirDB();
-  return new Promise(resolve => {
-    const request = db.transaction("fotos", "readonly").objectStore("fotos").get(docId);
-    request.onsuccess = () => resolve(request.result || null);
-  });
-}
-
-// ==========================================
-// COMPARTILHAMENTO VIA FIREBASE
+// COMPARTILHAMENTO (Envia apenas texto)
 // ==========================================
 async function compartilharViaWhatsApp(tipo) {
   const data = collectFormData();
   data.exportedAt = new Date().toISOString();
   data.status = tipo;
 
+  // Remove as fotos para não estourar o Firebase
+  data.attachments = {}; 
+
   const docId = 'doc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
 
   try {
     const { db, doc, setDoc } = window.firebaseDB;
-
-    // SEPARAÇÃO MÁGICA:
-    // 1. Guarda as fotos pesadas no seu navegador (IndexedDB)
-    await salvarFotosLocalmente(docId, data.attachments);
-
-    // 2. Remove as fotos do documento que vai para o Firebase
-    data.attachments = {};
-
-    // 3. Salva apenas textos e assinaturas no Firebase
     await setDoc(doc(db, "documentos", docId), data);
 
     const baseUrl = window.location.href.split('?')[0].split('#')[0];
     const linkAssinatura = `${baseUrl}?id=${docId}&modo=assinatura`;
 
     let mensagem = `Olá! Segue o relatório de comissionamento para sua assinatura.\n\n👉 ${linkAssinatura}`;
-    const urlWhatsApp = `https://wa.me/?text=${encodeURIComponent(mensagem)}`;
-    window.open(urlWhatsApp, '_blank');
+    window.open(`https://wa.me/?text=${encodeURIComponent(mensagem)}`, '_blank');
     
-    showToast('Link gerado! As fotos ficaram salvas no seu dispositivo.', 'success');
+    showToast('Link gerado com sucesso!', 'success');
   } catch (error) {
-    console.error("Erro ao salvar no Firebase:", error);
+    console.error("Erro ao salvar:", error);
     showToast('Erro ao conectar com o servidor.', 'error');
   }
 }
@@ -450,20 +416,14 @@ async function carregarDadosDaUrl() {
 
   try {
     const { db, doc, getDoc } = window.firebaseDB;
-    const docRef = doc(db, "documentos", docId);
-    const docSnap = await getDoc(docRef);
+    const docSnap = await getDoc(doc(db, "documentos", docId));
 
     if (docSnap.exists()) {
       const data = docSnap.data();
       
-      // Se for retorno do técnico, busca as fotos no IndexedDB local
-      if (modo !== 'assinatura') {
-        const fotosLocais = await recuperarFotosLocalmente(docId);
-        if (fotosLocais) {
-          data.attachments = fotosLocais;
-        }
-      } else {
-        data.attachments = {}; // Cliente não vê fotos
+      // No modo assinatura, o cliente não vê as fotos
+      if (modo === 'assinatura') {
+        data.attachments = {};
       }
 
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -473,15 +433,15 @@ async function carregarDadosDaUrl() {
       if (modo === 'assinatura') {
         ativarModoCliente(docId);
       } else {
-        showToast('Documento retornado e fotos recuperadas!', 'success');
+        showToast('Documento retornado com sucesso!', 'success');
       }
       return true;
     } else {
-      showToast('Documento não encontrado no servidor.', 'error');
+      showToast('Documento não encontrado.', 'error');
     }
   } catch (e) {
-    console.error("Erro ao ler dados do Firebase:", e);
-    showToast('Link inválido ou sem conexão.', 'error');
+    console.error("Erro ao ler dados:", e);
+    showToast('Link inválido.', 'error');
   }
   return false;
 }
@@ -520,7 +480,6 @@ async function concluirAssinaturaCliente(docId) {
   
   try {
     const { db, doc, updateDoc } = window.firebaseDB;
-    
     const docRef = doc(db, "documentos", docId);
     
     await updateDoc(docRef, {
@@ -536,14 +495,67 @@ async function concluirAssinaturaCliente(docId) {
     const linkAssinado = `${baseUrl}?id=${docId}&modo=retorno`;
 
     const mensagem = `Olá! Documento assinado com sucesso.\n\nAqui está o link com o registro da assinatura:\n👉 ${linkAssinado}`;
-    const urlWhatsApp = `https://wa.me/?text=${encodeURIComponent(mensagem)}`;
-    window.open(urlWhatsApp, '_blank');
+    window.open(`https://wa.me/?text=${encodeURIComponent(mensagem)}`, '_blank');
     
-    showToast('Assinatura concluída! Envie o link para o técnico.', 'success');
+    showToast('Assinatura concluída!', 'success');
   } catch (error) {
-    console.error("Erro ao salvar assinatura no Firebase:", error);
-    showToast('Erro ao enviar assinatura. Tente novamente.', 'error');
+    console.error("Erro ao salvar assinatura:", error);
+    showToast('Erro ao enviar assinatura.', 'error');
   }
+}
+
+// ==========================================
+// COMBINAR OS JSONs (A Mágica do Merge)
+// ==========================================
+function combinarArquivos() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const jsonCliente = JSON.parse(event.target.result);
+        const dadosAtuais = collectFormData();
+        
+        if (jsonCliente.signatures && jsonCliente.signatures.sigCliente) {
+          dadosAtuais.signatures.sigCliente = jsonCliente.signatures.sigCliente;
+          dadosAtuais.signatures.sigClienteName = jsonCliente.signatures.sigClienteName || '';
+          dadosAtuais.signatures.sigClienteCargo = jsonCliente.signatures.sigClienteCargo || '';
+          dadosAtuais.signatures.sigClienteDate = jsonCliente.signatures.sigClienteDate || '';
+          dadosAtuais.status = 'assinado';
+          
+          if (jsonCliente.opcoes && jsonCliente.opcoes.sec5Comentario) {
+             dadosAtuais.opcoes.sec5Comentario = jsonCliente.opcoes.sec5Comentario;
+          }
+        } else {
+           showToast('O arquivo não contém uma assinatura válida.', 'warning');
+           return;
+        }
+
+        applyFormData(dadosAtuais);
+        
+        const imgEl = document.getElementById('img_sigCliente');
+        if (imgEl && dadosAtuais.signatures.sigCliente) {
+          imgEl.src = dadosAtuais.signatures.sigCliente;
+          imgEl.classList.remove('hidden');
+        }
+
+        showToast('Arquivos combinados com sucesso! Pronto para imprimir.', 'success');
+        
+      } catch (err) {
+        console.error(err);
+        showToast('Erro ao ler o arquivo. Verifique se é o JSON correto.', 'error');
+      }
+    };
+    reader.readAsText(file);
+  };
+  
+  input.click();
 }
 
 // ==========================================
