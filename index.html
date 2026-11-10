@@ -45,21 +45,18 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-app.js";
     import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/13.2.0/firebase-firestore.js";
 
-    // Credenciais do SEU projeto
     const firebaseConfig = {
       apiKey: "AIzaSyA8Sbmktltq56k_eCC0SLXSMLQOHHqQ7Ss",
       authDomain: "formulario-cwr-alimentador.firebaseapp.com",
       projectId: "formulario-cwr-alimentador",
       storageBucket: "formulario-cwr-alimentador.firebasestorage.app",
       messagingSenderId: "990647015687",
-      appId: "1:990647015687:web:210039819b3ebaf824cda2",
-      measurementId: "G-RWXRLR529H"
+      appId: "1:990647015687:web:210039819b3ebaf824cda2"
     };
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Deixa o banco de dados visível para o script logic.js
     window.firebaseDB = { db, doc, setDoc, getDoc, updateDoc };
   </script>
 </head>
@@ -90,6 +87,11 @@
             <i class="fa-solid fa-floppy-disk"></i><span class="hidden sm:inline">Salvar</span>
           </button>
           
+          <!-- BOTÃO COMBINAR JSON -->
+          <button onclick="combinarArquivos()" class="btn-tool px-3 py-2 text-[11px] font-bold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors flex items-center gap-1.5 border border-blue-700 uppercase tracking-wider" title="Combinar JSONs (Fotos + Assinatura)">
+            <i class="fa-solid fa-code-merge"></i><span class="hidden sm:inline">Combinar</span>
+          </button>
+
           <!-- BOTÃO COMPARTILHAR PARA ASSINATURA -->
           <button onclick="compartilharViaWhatsApp('pendente_assinatura')" class="btn-tool px-3 py-2 text-[11px] font-bold text-white bg-green-600 hover:bg-green-700 rounded transition-colors flex items-center gap-1.5 border border-green-700 uppercase tracking-wider" title="Compartilhar para Assinatura">
             <i class="fa-brands fa-whatsapp"></i><span class="hidden sm:inline">Compartilhar</span>
