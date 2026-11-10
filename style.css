@@ -1,0 +1,152 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+* { font-family: 'Inter', system-ui, sans-serif; }
+html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
+/* Customização de checkbox e radio */
+.custom-checkbox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #8f98a7;
+  border-radius: 3px;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+/* Wrappers para esconder o input nativo e deixar o quadrado clicável */
+.checkbox-wrapper, .radio-wrapper { position: relative; display: inline-flex; align-items: center; cursor: pointer; margin: 0; }
+.checkbox-wrapper input[type="checkbox"], .radio-wrapper input[type="radio"] { position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; z-index: 10; margin: 0; }
+
+.checkbox-wrapper input[type="checkbox"]:checked + .custom-checkbox,
+.radio-wrapper input[type="radio"]:checked + .custom-checkbox {
+  background-color: #14171c;
+  border-color: #14171c;
+}
+
+.checkbox-wrapper input[type="checkbox"]:checked + .custom-checkbox::after,
+.radio-wrapper input[type="radio"]:checked + .custom-checkbox::after {
+  content: '\f00c';
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  color: #fff;
+  font-size: 10px;
+}
+
+/* IMPRESSÃO */
+@media print {
+  @page { size: A4; margin: 10mm 10mm 5mm 10mm; }
+  html, body {
+    background: #fff !important; padding: 0 !important; margin: 0 !important;
+    color: #000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .no-print { display: none !important; }
+  .shadow-card, .shadow-cardHover { box-shadow: none !important; }
+
+  textarea, input, select {
+    border: none !important; background: transparent !important;
+    appearance: none !important; -webkit-appearance: none !important;
+  }
+
+  .report-card { border: none !important; box-shadow: none !important; padding: 0 !important; margin: 0 !important; max-width: 100% !important; }
+  .section-head, .card-head { background: #14171c !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  .checkbox-wrapper input[type="checkbox"], .radio-wrapper input[type="radio"] { display: none !important; }
+  .checkbox-wrapper .custom-checkbox, .radio-wrapper .custom-checkbox {
+    display: inline-flex !important;
+    border: 2px solid #14171c !important;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  .checkbox-wrapper input[type="checkbox"]:checked + .custom-checkbox,
+  .radio-wrapper input[type="radio"]:checked + .custom-checkbox {
+    background-color: #c8102e !important;
+    border-color: #c8102e !important;
+  }
+  .checkbox-wrapper input[type="checkbox"]:checked + .custom-checkbox::after,
+  .radio-wrapper input[type="radio"]:checked + .custom-checkbox::after { color: #fff !important; }
+  
+  .page-break { page-break-before: always; }
+  tr { break-inside: avoid; page-break-inside: avoid; }
+  
+  /* ASSINATURA NA IMPRESSÃO */
+  .signature-canvas { display: none !important; }
+  .signature-img-print { display: block !important; max-height: 80px !important; margin: 0 auto; object-fit: contain; }
+  .signature-wrap { border: none !important; }
+  
+  /* COMENTÁRIOS NA IMPRESSÃO */
+  .print-only-text { display: block !important; white-space: pre-wrap !important; word-wrap: break-word !important; font-size: 11px !important; line-height: 1.5 !important; text-align: justify !important; }
+  textarea.comment-textarea { display: none !important; }
+}
+
+/* INPUTS E BOTÕES */
+.field-input { transition: background .15s, border-color .15s; }
+.field-input:focus { background: #f6f7f9; outline: none; border-color: #14171c !important; }
+input::placeholder, textarea::placeholder { color: #8f98a7; }
+
+.btn-tool { transition: all .15s ease; white-space: nowrap; }
+.btn-tool:hover { transform: translateY(-1px); }
+.btn-tool:active { transform: translateY(0); }
+
+.section-head { background: #14171c; letter-spacing: .08em; }
+.btn-metso { background: #14171c; color: #fff; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; font-size: 11px; padding: 10px 18px; transition: background .15s ease; border: none; }
+.btn-metso:hover { background: #23272f; }
+.btn-whatsapp { background: #25D366; color: #fff; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; font-size: 11px; padding: 10px 18px; transition: background .15s ease; border: none; }
+.btn-whatsapp:hover { background: #1ebe56; }
+
+.metso-heading { font-weight: 900; text-transform: uppercase; letter-spacing: -.01em; line-height: 1.1; }
+
+/* Tabela de Check-list */
+.checklist-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+.checklist-table th { background: #f6f7f9; border: 1px solid #d8dce3; padding: 6px; text-align: left; font-weight: 700; color: #4b5361; text-transform: uppercase; letter-spacing: .05em; }
+.checklist-table td { border: 1px solid #d8dce3; padding: 6px 8px; vertical-align: middle; color: #23272f; }
+.checklist-table tr:nth-child(even) td { background-color: #fbfbfc; }
+.checklist-table .check-cell { width: 40px; text-align: center; }
+.checklist-table input[type="text"] { width: 100%; border: 1px solid #d8dce3; border-radius: 4px; padding: 4px 8px; background: #fff; font-size: 11px; outline: none; }
+.checklist-table input[type="text"]:focus { border-color: #14171c; }
+
+/* Customizações do Anexo */
+.attachment-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: #eef0f3; border: 1px solid #d8dce3; border-radius: 4px;
+  padding: 2px 6px; font-size: 9px; color: #4b5361; cursor: pointer;
+  transition: all 0.15s ease;
+}
+.attachment-chip:hover { background: #e4e7ec; border-color: #b9c0cb; }
+.attachment-chip img { width: 16px; height: 16px; object-fit: cover; border-radius: 2px; }
+.attachment-chip .icon {
+  width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; background: #23272f; color: #fff; border-radius: 2px; font-size: 8px;
+}
+
+/* Modal Overlay */
+#mediaModal { backdrop-filter: blur(4px); }
+
+/* Canvas de Assinatura */
+.signature-canvas {
+  background-color: #ffffff;
+  background-image: linear-gradient(to right, #e4e7ec, #e4e7ec);
+  background-repeat: no-repeat;
+  background-position: bottom 20px left 20px;
+  background-size: calc(100% - 40px) 1px;
+  cursor: crosshair;
+  touch-action: none;
+  width: 100%;
+  height: 120px;
+  position: relative;
+  z-index: 10;
+}
+
+.signature-img-print {
+  display: none; 
+  width: 100%;
+  height: 120px;
+  object-fit: contain;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 5; 
+  background-color: #fff;
+}

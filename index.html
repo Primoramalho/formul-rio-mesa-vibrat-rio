@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Comissionamento e Entrega Técnica de Alimentadores MV e AV - Metso</title>
+
+  <!-- FAVICON -->
+  <link rel="icon" type="image/jpeg" href="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTLRtKKNGlAYQJNh1srudual1LLuXEthiCLSycbkf1ziA&s=10">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Configuração do Tailwind -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            metso: { 50:'#fdf2f2', 100:'#fbe1e1', 500:'#c8102e', 600:'#a80d26', 700:'#8a0a1f' },
+            ink: {
+              0:'#ffffff', 25:'#fbfbfc', 50:'#f6f7f9', 100:'#eef0f3', 150:'#e4e7ec',
+              200:'#d8dce3', 300:'#b9c0cb', 400:'#8f98a7', 500:'#6a7383', 600:'#4b5361',
+              700:'#363c47', 800:'#23272f', 900:'#14171c', 950:'#0a0c10'
+            }
+          },
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+          boxShadow: {
+            card: '0 1px 2px rgba(10,12,16,.04), 0 4px 12px rgba(10,12,16,.06)',
+            cardHover: '0 2px 4px rgba(10,12,16,.06), 0 12px 24px rgba(10,12,16,.08)'
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- CSS Customizado -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-ink-100 min-h-screen text-ink-800 antialiased">
+
+  <!-- BARRA DE FERRAMENTAS -->
+  <div class="w-full pt-3 sm:pt-5 pb-3 sm:pb-5 px-3 sm:px-5 no-print">
+    <div class="bg-white rounded-lg shadow-card border border-ink-200 overflow-hidden">
+      <div class="px-4 sm:px-5 py-3 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-4">
+          <div class="flex flex-col leading-none">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/f/f9/Metso-logo.png" alt="Metso" class="h-6 w-auto object-contain">
+            <span class="text-metso-500 text-[8px] font-bold uppercase tracking-[.25em] mt-1">Field Service</span>
+          </div>
+          <div class="h-8 w-px bg-ink-200 hidden sm:block"></div>
+          <div class="hidden sm:block">
+            <div class="text-[10px] uppercase font-bold text-ink-500 tracking-widest">Comissionamento</div>
+            <div class="text-sm font-bold text-ink-900 leading-tight">Alimentadores MV e AV</div>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-1.5">
+          <label class="btn-tool px-3 py-2 text-[11px] font-bold text-ink-700 bg-white hover:bg-ink-100 rounded transition-colors flex items-center gap-1.5 cursor-pointer border border-ink-200 uppercase tracking-wider" title="Carregar JSON">
+            <i class="fa-solid fa-folder-open"></i><span class="hidden sm:inline">Carregar</span>
+            <input type="file" id="jsonFileInput" accept=".json" onchange="importJSONState(event)" class="hidden">
+          </label>
+          <button onclick="exportJSONState()" class="btn-tool px-3 py-2 text-[11px] font-bold text-ink-700 bg-white hover:bg-ink-100 rounded transition-colors flex items-center gap-1.5 border border-ink-200 uppercase tracking-wider" title="Salvar JSON">
+            <i class="fa-solid fa-floppy-disk"></i><span class="hidden sm:inline">Salvar</span>
+          </button>
+          
+          <!-- BOTÃO COMPARTILHAR PARA ASSINATURA -->
+          <button onclick="compartilharViaWhatsApp('pendente_assinatura')" class="btn-tool px-3 py-2 text-[11px] font-bold text-white bg-green-600 hover:bg-green-700 rounded transition-colors flex items-center gap-1.5 border border-green-700 uppercase tracking-wider" title="Compartilhar para Assinatura">
+            <i class="fa-brands fa-whatsapp"></i><span class="hidden sm:inline">Compartilhar</span>
+          </button>
+
+          <button onclick="clearForm()" class="btn-tool px-3 py-2 text-[11px] font-bold text-ink-700 bg-white hover:bg-ink-100 rounded transition-colors flex items-center gap-1.5 border border-ink-200 uppercase tracking-wider" title="Limpar tudo">
+            <i class="fa-solid fa-broom"></i><span class="hidden sm:inline">Limpar</span>
+          </button>
+          <button onclick="window.print()" class="btn-metso rounded shadow-sm flex items-center gap-1.5" title="Imprimir / Gerar PDF">
+            <i class="fa-solid fa-print"></i><span>Imprimir</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTEÚDO PRINCIPAL -->
+  <form id="reportForm" onsubmit="event.preventDefault();" class="w-full bg-white rounded-lg shadow-card border border-ink-200 overflow-hidden report-card mx-3 sm:mx-5 mb-3 sm:mb-5" style="width: calc(100% - 1.5rem); margin-left: auto; margin-right: auto; margin-bottom: 0.75rem;">
+    
+    <!-- CABEÇALHO DO DOCUMENTO -->
+    <div class="card-head bg-ink-950 text-white px-5 py-4 border-b-4 border-metso-500 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+      <div class="flex items-center gap-4">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/f/f9/Metso-logo.png" alt="Metso" class="h-6 w-auto object-contain brightness-0 invert">
+        <span class="h-8 w-px bg-white/20"></span>
+        <div>
+          <div class="text-[10px] text-metso-500 font-bold uppercase tracking-[.2em]">Metso Field Service</div>
+          <h1 class="metso-heading text-sm sm:text-base text-white mt-0.5">Comissionamento e Entrega Técnica de Alimentadores MV e AV</h1>
+          <div class="text-[9px] text-ink-400 mt-1">Documento de Verificação e Entrega Técnica</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="p-5 space-y-5">
+
+      <!-- DADOS DO EQUIPAMENTO -->
+      <div class="border border-ink-200 overflow-hidden">
+        <div class="section-head text-white font-black text-[11px] px-4 py-2.5 uppercase flex items-center gap-2.5">
+          <span class="w-1 h-3 bg-metso-500"></span>
+          <span>Identificação do Equipamento</span>
+        </div>
+        <div class="p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 bg-white">
+          <div>
+            <div class="text-[9px] uppercase font-bold text-ink-500 tracking-widest mb-1">Modelo</div>
+            <input type="text" id="eqModelo" class="field-input w-full px-2 py-1.5 border border-ink-200 rounded font-semibold text-xs outline-none uppercase" placeholder="Modelo do Alimentador">
+          </div>
+          <div>
+            <div class="text-[9px] uppercase font-bold text-ink-500 tracking-widest mb-1">Nº Série</div>
+            <input type="text" id="eqSerie" class="field-input w-full px-2 py-1.5 border border-ink-200 rounded font-mono text-xs outline-none uppercase" placeholder="S/N">
+          </div>
+          <div>
+            <div class="text-[9px] uppercase font-bold text-ink-500 tracking-widest mb-1">PF</div>
+            <input type="text" id="eqPF" class="field-input w-full px-2 py-1.5 border border-ink-200 rounded font-mono text-xs outline-none uppercase" placeholder="PF">
+          </div>
+          <div>
+            <div class="text-[9px] uppercase font-bold text-ink-500 tracking-widest mb-1">Data</div>
+            <input type="date" id="eqData" class="field-input w-full px-2 py-1.5 border border-ink-200 rounded font-medium text-xs outline-none">
+          </div>
+          <div class="sm:col-span-2">
+            <div class="text-[9px] uppercase font-bold text-ink-500 tracking-widest mb-1">Atendimento</div>
+            <input type="text" id="eqAtendimento" class="field-input w-full px-2 py-1.5 border border-ink-200 rounded font-medium text-xs outline-none uppercase" placeholder="Tipo de Atendimento">
+          </div>
+          <div class="sm:col-span-2">
+            <div class="text-[9px] uppercase font-bold text-ink-500 tracking-widest mb-1">Cliente</div>
+            <input type="text" id="eqCliente" class="field-input w-full px-2 py-1.5 border border-ink-200 rounded font-semibold text-xs outline-none uppercase" placeholder="Nome do Cliente">
+          </div>
+          <div class="sm:col-span-2">
+            <div class="text-[9px] uppercase font-bold text-ink-500 tracking-widest mb-1">Local</div>
+            <input type="text" id="eqLocal" class="field-input w-full px-2 py-1.5 border border-ink-200 rounded font-medium text-xs outline-none uppercase" placeholder="Local / Unidade">
+          </div>
+          <div class="sm:col-span-2">
+            <div class="text-[9px] uppercase font-bold text-ink-500 tracking-widest mb-1">TAG</div>
+            <input type="text" id="eqTag" class="field-input w-full px-2 py-1.5 border border-ink-200 rounded font-mono text-xs outline-none uppercase" placeholder="TAG do Equipamento">
+          </div>
+        </div>
+      </div>
+
+      <!-- 1. VERIFICAÇÕES ANTES DA PARTIDA -->
+      <div class="border border-ink-200 overflow-hidden page-break">
+        <div class="section-head text-white font-black text-[11px] px-4 py-2.5 uppercase flex items-center gap-2.5">
+          <span class="w-1 h-3 bg-metso-500"></span>
+          <span>1 - Verificações Antes da Partida</span>
+        </div>
+        <div class="bg-white p-2">
+          <table class="checklist-table">
+            <thead>
+              <tr>
+                <th class="check-cell text-center">OK</th>
+                <th class="check-cell text-center">N/OK</th>
+                <th>Item de Verificação / Comentários e Anexos</th>
+              </tr>
+            </thead>
+            <tbody id="checklistAntes"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 2. VERIFICAÇÕES EM OPERAÇÃO -->
+      <div class="border border-ink-200 overflow-hidden page-break">
+        <div class="section-head text-white font-black text-[11px] px-4 py-2.5 uppercase flex items-center gap-2.5">
+          <span class="w-1 h-3 bg-metso-500"></span>
+          <span>2 - Verificações em Operação</span>
+        </div>
+        <div class="bg-white p-2">
+          <table class="checklist-table">
+            <thead>
+              <tr>
+                <th class="check-cell text-center">OK</th>
+                <th class="check-cell text-center">N/OK</th>
+                <th>Item de Verificação / Comentários e Anexos</th>
+              </tr>
+            </thead>
+            <tbody id="checklistOperacao"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 3. VERIFICAÇÕES DURANTE E APÓS PARADA -->
+      <div class="border border-ink-200 overflow-hidden">
+        <div class="section-head text-white font-black text-[11px] px-4 py-2.5 uppercase flex items-center gap-2.5">
+          <span class="w-1 h-3 bg-metso-500"></span>
+          <span>3 - Verificações Durante e Após Parada</span>
+        </div>
+        <div class="bg-white p-2">
+          <table class="checklist-table">
+            <thead>
+              <tr>
+                <th class="check-cell text-center">OK</th>
+                <th class="check-cell text-center">N/OK</th>
+                <th>Item de Verificação / Comentários e Anexos</th>
+              </tr>
+            </thead>
+            <tbody id="checklistParada"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 4. REGISTROS -->
+      <div class="border border-ink-200 overflow-hidden page-break">
+        <div class="section-head text-white font-black text-[11px] px-4 py-2.5 uppercase flex items-center gap-2.5">
+          <span class="w-1 h-3 bg-metso-500"></span>
+          <span>4 - Registros</span>
+        </div>
+        <div class="p-4 bg-white space-y-4 text-xs">
+          
+          <div class="flex flex-col sm:flex-row sm:items-center gap-2 p-2 bg-ink-50 rounded border border-ink-200">
+            <div class="w-full sm:w-1/3 font-bold text-ink-700">4.1. Altura de molas (mm):</div>
+            <div class="flex-grow grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div class="flex items-center gap-1"><span class="text-[10px] font-bold text-ink-500">AD</span><input type="text" id="regMolaAD" class="field-input w-full border-b border-ink-300 px-1 py-0.5 outline-none focus:border-ink-900 bg-transparent"></div>
+              <div class="flex items-center gap-1"><span class="text-[10px] font-bold text-ink-500">AE</span><input type="text" id="regMolaAE" class="field-input w-full border-b border-ink-300 px-1 py-0.5 outline-none focus:border-ink-900 bg-transparent"></div>
+              <div class="flex items-center gap-1"><span class="text-[10px] font-bold text-ink-500">DD</span><input type="text" id="regMolaDD" class="field-input w-full border-b border-ink-300 px-1 py-0.5 outline-none focus:border-ink-900 bg-transparent"></div>
+              <div class="flex items-center gap-1"><span class="text-[10px] font-bold text-ink-500">DE</span><input type="text" id="regMolaDE" class="field-input w-full border-b border-ink-300 px-1 py-0.5 outline-none focus:border-ink-900 bg-transparent"></div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0 sm:ml-2 mt-2 sm:mt-0">
+              <label class="no-print cursor-pointer text-ink-500 hover:text-metso-500 transition-colors bg-white hover:bg-metso-50 rounded px-2 py-1 flex items-center gap-1 text-[10px] font-bold border border-ink-200" title="Anexar Foto/Vídeo">
+                <i class="fa-solid fa-paperclip"></i><span>Anexar</span>
+                <input type="file" multiple accept="image/*,video/*" onchange="handleAttachment(event, 'regMola')" class="hidden">
+              </label>
+              <div id="attach_container_regMola" class="flex flex-wrap gap-1 items-center"></div>
+            </div>
+          </div>
+
+          <div class="flex flex-col sm:flex-row sm:items-center gap-2 p-2 bg-ink-50 rounded border border-ink-200">
+            <div class="w-full sm:w-1/3 font-bold text-ink-700">4.2. Mecanismos (Tipo / Config / %):</div>
+            <div class="flex-grow flex flex-wrap items-center gap-2">
+              <input type="text" id="regMecTipo" class="field-input w-full sm:w-1/3 border-b border-ink-300 px-1 py-0.5 outline-none focus:border-ink-900 bg-transparent" placeholder="Tipo">
+              <input type="text" id="regMecConfig" class="field-input w-full sm:w-1/3 border-b border-ink-300 px-1 py-0.5 outline-none focus:border-ink-900 bg-transparent" placeholder="Config">
+              <input type="text" id="regMecPerc" class="field-input w-full sm:w-1/4 border-b border-ink-300 px-1 py-0.5 outline-none focus:border-ink-900 bg-transparent" placeholder="%">
+            </div>
+            <div class="flex items-center gap-2 shrink-0 sm:ml-2 mt-2 sm:mt-0">
+              <label class="no-print cursor-pointer text-ink-500 hover:text-metso-500 transition-colors bg-white hover:bg-metso-50 rounded px-2 py-1 flex items-center gap-1 text-[10px] font-bold border border-ink-200" title="Anexar Foto/Vídeo">
+                <i class="fa-solid fa-paperclip"></i><span>Anexar</span>
+                <input type="file" multiple accept="image/*,video/*" onchange="handleAttachment(event, 'regMec')" class="hidden">
+              </label>
+              <div id="attach_container_regMec" class="flex flex-wrap gap-1 items-center"></div>
+            </div>
+          </div>
+
+          <div class="flex flex-col sm:flex-row sm:items-center gap-2 p-2 bg-ink-50 rounded border border-ink-200">
+            <div class="w-full sm:w-1/3 font-bold text-ink-700">4.3. Bump Test:</div>
+            <div class="flex-grow grid grid-cols-3 gap-2">
+              <div class="flex items-center gap-1"><span class="text-[10px] font-bold text-ink-500">X</span><input type="text" id="regBumpX" class="field-input w-full border-b border-ink-300 px-1 py-0.5 outline-none focus:border-ink-900 bg-transparent"></div>
+              <div class="flex items-center gap-1"><span class="text-[10px] font-bold text-ink-500">Y</span><input type="text" id="regBumpY" class="field-input w-full border-b border-ink-300 px-1 py-0.5 outline-none focus:border-ink-900 bg-transparent"></div>
+              <div class="flex items-center gap-1"><span class="text-[10px] font-bold text-ink-500">Z</span><input type="text" id="regBumpZ" class="field-input w-full border-b border-ink-300 px-1 py-0.5 outline-none focus:border-ink-900 bg-transparent"></div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0 sm:ml-2 mt-2 sm:mt-0">
+              <label class="no-print cursor-pointer text-ink-500 hover:text-metso-500 transition-colors bg-white hover:bg-metso-50 rounded px-2 py-1 flex items-center gap-1 text-[10px] font-bold border border-ink-200" title="Anexar Foto/Vídeo">
+                <i class="fa-solid fa-paperclip"></i><span>Anexar</span>
+                <input type="file" multiple accept="image/*,video/*" onchange="handleAttachment(event, 'regBump')" class="hidden">
+              </label>
+              <div id="attach_container_regBump" class="flex flex-wrap gap-1 items-center"></div>
+            </div>
+          </div>
+
+          <div class="p-2 bg-ink-50 rounded border border-ink-200 space-y-3">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+              <div class="font-bold text-ink-700 w-full sm:w-1/3">4.4. Amplitudes:</div>
+              <div class="flex-grow flex items-center gap-2">
+                <span class="text-[10px] font-bold text-ink-500 uppercase tracking-widest">Método:</span>
+                <input type="text" id="regAmpMetodo" class="field-input flex-grow border-b border-ink-300 px-1 py-0.5 outline-none focus:border-ink-900 bg-transparent" placeholder="Descreva o método utilizado...">
+              </div>
+              <div class="flex items-center gap-2 shrink-0 sm:ml-2 mt-2 sm:mt-0">
+                <label class="no-print cursor-pointer text-ink-500 hover:text-metso-500 transition-colors bg-white hover:bg-metso-50 rounded px-2 py-1 flex items-center gap-1 text-[10px] font-bold border border-ink-200" title="Anexar Foto/Vídeo">
+                  <i class="fa-solid fa-paperclip"></i><span>Anexar</span>
+                  <input type="file" multiple accept="image/*,video/*" onchange="handleAttachment(event, 'regAmp')" class="hidden">
+                </label>
+                <div id="attach_container_regAmp" class="flex flex-wrap gap-1 items-center"></div>
+              </div>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+              <div>
+                <div class="text-[10px] font-bold text-ink-500 mb-1 uppercase tracking-wider">Sem Carga</div>
+                <div class="grid grid-cols-4 gap-1">
+                  <div><span class="text-[9px] font-bold text-ink-400 block">AD</span><input type="text" id="regAmpSC_AD" class="field-input w-full border-b border-ink-300 px-1 py-0.5 outline-none focus:border-ink-900 bg-transparent"></div>
+                  <div><span class="text-[9px] font-bold text-ink-400 block">AE</span><input type="text" id="regAmpSC_AE" class="field-input w-full border-b border-ink-300 px-1 py-0.5 outline-none focus:border-ink-900 bg-transparent"></div>
+                  <div><span class="text-[9px] font-bold text-ink-400 block">DD</span><input type="text" id="regAmpSC_DD" class="field-input w-full border-b border-ink-300 px-1 py-0.5 outline-none focus:border-ink-900 bg-transparent"></div>
+                  <div><span class="text-[9px] font-bold text-ink-400 block">DE</span><input type="text" id="regAmpSC_DE" class="field-input w-full border-b border-ink-300 px-1 py-0.5 outline-none focus:border-ink-900 bg-transparent"></div>
+                </div>
+              </div>
+              <div>
+                <div class="text-[10px] font-bold text-ink-500 mb-1 uppercase tracking-wider">Com Carga</div>
+                <div class="grid grid-cols-4 gap-1">
+                  <div><span class="text-[9px] font-bold text-ink-400 block">AD</span><input type="text" id="regAmpCC_AD" class="field-input w-full border-b border-ink-300 px-1 py-0.5 outline-none focus:border-ink-900 bg-transparent"></div>
+                  <div><span class="text-[9px] font-bold text-ink-400 block">AE</span><input type="text" id="regAmpCC_AE" class="field-input w-full border-b border-ink-300 px-1 py-0.5 outline-none focus:border-ink-900 bg-transparent"></div>
+                  <div><span class="text-[9px] font-bold text-ink-400 block">DD</span><input type="text" id="regAmpCC_DD" class="field-input w-full border-b border-ink-300 px-1 py-0.5 outline-none focus:border-ink-900 bg-transparent"></div>
+                  <div><span class="text-[9px] font-bold text-ink-400 block">DE</span><input type="text" id="regAmpCC_DE" class="field-input w-full border-b border-ink-300 px-1 py-0.5 outline-none focus:border-ink-900 bg-transparent"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex flex-col sm:flex-row sm:items-center gap-2 p-2 bg-ink-50 rounded border border-ink-200">
+            <div class="w-full sm:w-1/3 font-bold text-ink-700">4.5. Aceleração:</div>
+            <div class="flex-grow">
+              <input type="text" id="regAceleracao" class="field-input w-full border-b border-ink-300 px-1 py-0.5 outline-none focus:border-ink-900 bg-transparent">
+            </div>
+            <div class="flex items-center gap-2 shrink-0 sm:ml-2 mt-2 sm:mt-0">
+              <label class="no-print cursor-pointer text-ink-500 hover:text-metso-500 transition-colors bg-white hover:bg-metso-50 rounded px-2 py-1 flex items-center gap-1 text-[10px] font-bold border border-ink-200" title="Anexar Foto/Vídeo">
+                <i class="fa-solid fa-paperclip"></i><span>Anexar</span>
+                <input type="file" multiple accept="image/*,video/*" onchange="handleAttachment(event, 'regAceleracao')" class="hidden">
+              </label>
+              <div id="attach_container_regAceleracao" class="flex flex-wrap gap-1 items-center"></div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            
+            <div class="p-2 bg-ink-50 rounded border border-ink-200 space-y-2">
+              <div class="font-bold text-ink-700">4.6. Motor 1</div>
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] font-bold text-ink-500 w-20">In plena carga</span>
+                <input type="text" id="regM1In" class="field-input w-full border-b border-ink-300 px-1 py-0.5 outline-none focus:border-ink-900 bg-transparent" placeholder="In (A)">
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] font-bold text-ink-500 w-20">Temp (°C)</span>
+                <input type="text" id="regM1Temp" class="field-input w-full border-b border-ink-300 px-1 py-0.5 outline-none focus:border-ink-900 bg-transparent" placeholder="Temperatura">
+              </div>
+              <div class="flex items-center justify-between mt-2 pt-1 border-t border-ink-200">
+                <span class="text-[10px] text-ink-500 font-bold uppercase tracking-widest">Anexos</span>
+                <div class="flex items-center gap-2">
+                  <label class="no-print cursor-pointer text-ink-500 hover:text-metso-500 transition-colors bg-white hover:bg-metso-50 rounded px-2 py-1 flex items-center gap-1 text-[10px] font-bold border border-ink-200" title="Anexar Foto/Vídeo">
+                    <i class="fa-solid fa-paperclip"></i><span>Anexar</span>
+                    <input type="file" multiple accept="image/*,video/*" onchange="handleAttachment(event, 'regM1')" class="hidden">
+                  </label>
+                  <div id="attach_container_regM1" class="flex flex-wrap gap-1 items-center"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="p-2 bg-ink-50 rounded border border-ink-200 space-y-2">
+              <div class="font-bold text-ink-700">4.7. Motor 2</div>
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] font-bold text-ink-500 w-20">In plena carga</span>
+                <input type="text" id="regM2In" class="field-input w-full border-b border-ink-300 px-1 py-0.5 outline-none focus:border-ink-900 bg-transparent" placeholder="In (A)">
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] font-bold text-ink-500 w-20">Temp (°C)</span>
+                <input type="text" id="regM2Temp" class="field-input w-full border-b border-ink-300 px-1 py-0.5 outline-none focus:border-ink-900 bg-transparent" placeholder="Temperatura">
+              </div>
+              <div class="flex items-center justify-between mt-2 pt-1 border-t border-ink-200">
+                <span class="text-[10px] text-ink-500 font-bold uppercase tracking-widest">Anexos</span>
+                <div class="flex items-center gap-2">
+                  <label class="no-print cursor-pointer text-ink-500 hover:text-metso-500 transition-colors bg-white hover:bg-metso-50 rounded px-2 py-1 flex items-center gap-1 text-[10px] font-bold border border-ink-200" title="Anexar Foto/Vídeo">
+                    <i class="fa-solid fa-paperclip"></i><span>Anexar</span>
+                    <input type="file" multiple accept="image/*,video/*" onchange="handleAttachment(event, 'regM2')" class="hidden">
+                  </label>
+                  <div id="attach_container_regM2" class="flex flex-wrap gap-1 items-center"></div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="p-2 bg-ink-50 rounded border border-ink-200 space-y-2">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div class="font-bold text-ink-700">4.8. Temperaturas após horas:</div>
+              <div class="flex items-center gap-2">
+                <label class="no-print cursor-pointer text-ink-500 hover:text-metso-500 transition-colors bg-white hover:bg-metso-50 rounded px-2 py-1 flex items-center gap-1 text-[10px] font-bold border border-ink-200" title="Anexar Foto/Vídeo">
+                  <i class="fa-solid fa-paperclip"></i><span>Anexar</span>
+                  <input type="file" multiple accept="image/*,video/*" onchange="handleAttachment(event, 'regTemp')" class="hidden">
+                </label>
+                <div id="attach_container_regTemp" class="flex flex-wrap gap-1 items-center"></div>
+              </div>
+            </div>
+            
+            <div class="flex items-center gap-2 mt-1">
+              <span class="text-[10px] font-bold text-ink-500">Ambiente (°C)</span>
+              <input type="text" id="regTempAmbiente" class="field-input w-24 border-b border-ink-300 px-1 py-0.5 outline-none focus:border-ink-900 bg-transparent">
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3">
+              <div>
+                <div class="text-[10px] font-bold text-ink-500 mb-1 uppercase tracking-wider">Vibradores</div>
+                <div class="flex items-center gap-2 mb-1"><span class="text-[10px] font-bold text-ink-500 w-8">M1-</span><input type="text" id="regVibM1_LA" class="field-input w-1/2 border-b border-ink-300 px-1 py-0.5 outline-none focus:border-ink-900 bg-transparent" placeholder="LA"><input type="text" id="regVibM1_LOA" class="field-input w-1/2 border-b border-ink-300 px-1 py-0.5 outline-none focus:border-ink-900 bg-transparent" placeholder="LOA"></div>
+                <div class="flex items-center gap-2"><span class="text-[10px] font-bold text-ink-500 w-8">M2-</span><input type="text" id="regVibM2_LA" class="field-input w-1/2 border-b border-ink-300 px-1 py-0.5 outline-none focus:border-ink-900 bg-transparent" placeholder="LA"><input type="text" id="regVibM2_LOA" class="field-input w-1/2 border-b border-ink-300 px-1 py-0.5 outline-none focus:border-ink-900 bg-transparent" placeholder="LOA"></div>
+              </div>
+              <div>
+                <div class="text-[10px] font-bold text-ink-500 mb-1 uppercase tracking-wider">Motores</div>
+                <div class="flex items-center gap-2 mb-1"><span class="text-[10px] font-bold text-ink-500 w-8">M1-</span><input type="text" id="regMotM1_LA" class="field-input w-1/2 border-b border-ink-300 px-1 py-0.5 outline-none focus:border-ink-900 bg-transparent" placeholder="LA"><input type="text" id="regMotM1_LOA" class="field-input w-1/2 border-b border-ink-300 px-1 py-0.5 outline-none focus:border-ink-900 bg-transparent" placeholder="LOA"></div>
+                <div class="flex items-center gap-2"><span class="text-[10px] font-bold text-ink-500 w-8">M2-</span><input type="text" id="regMotM2_LA" class="field-input w-1/2 border-b border-ink-300 px-1 py-0.5 outline-none focus:border-ink-900 bg-transparent" placeholder="LA"><input type="text" id="regMotM2_LOA" class="field-input w-1/2 border-b border-ink-300 px-1 py-0.5 outline-none focus:border-ink-900 bg-transparent" placeholder="LOA"></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 5. TERMO DE ENTREGA TÉCNICA -->
+      <div class="border border-ink-200 overflow-hidden page-break">
+        <div class="section-head text-white font-black text-[11px] px-4 py-2.5 uppercase flex items-center gap-2.5">
+          <span class="w-1 h-3 bg-metso-500"></span>
+          <span>5 - Termo de Entrega Técnica</span>
+        </div>
+        <div class="p-4 bg-white space-y-4">
+          
+          <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+            <div class="font-bold text-ink-700 text-xs w-full sm:w-1/4">Equipamento:</div>
+            <div class="flex-grow flex flex-wrap gap-4">
+              <label class="radio-wrapper text-[11px] text-ink-600"><input type="radio" name="entregaEquip" value="Liberado sem ressalvas"><span class="custom-checkbox mr-1"></span>Liberado sem ressalvas</label>
+              <label class="radio-wrapper text-[11px] text-ink-600"><input type="radio" name="entregaEquip" value="Liberado com ressalvas"><span class="custom-checkbox mr-1"></span>Liberado com ressalvas</label>
+              <label class="radio-wrapper text-[11px] text-ink-600"><input type="radio" name="entregaEquip" value="Não liberado"><span class="custom-checkbox mr-1"></span>Não liberado</label>
+            </div>
+          </div>
+
+          <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+            <div class="font-bold text-ink-700 text-xs w-full sm:w-1/4">Relatórios Específicos:</div>
+            <div class="flex-grow flex flex-wrap gap-4">
+              <label class="radio-wrapper text-[11px] text-ink-600"><input type="radio" name="relatorios" value="Sim"><span class="custom-checkbox mr-1"></span>Sim</label>
+              <label class="radio-wrapper text-[11px] text-ink-600"><input type="radio" name="relatorios" value="Não"><span class="custom-checkbox mr-1"></span>Não</label>
+            </div>
+          </div>
+
+          <!-- CAMPO DE COMENTÁRIO COM ANEXO -->
+          <div class="pt-4 border-t border-ink-200">
+            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+              <div class="w-full sm:w-1/4">
+                <div class="font-bold text-ink-700 text-xs">Comentários / Observações:</div>
+              </div>
+              <div class="flex-grow">
+                <textarea id="sec5Comentario" class="w-full p-2 border border-ink-200 rounded outline-none focus:border-ink-900 text-xs sm:text-sm text-justify leading-relaxed resize-none overflow-hidden bg-white transition-all placeholder:text-ink-400" placeholder="Adicione observações adicionais sobre a entrega técnica..."></textarea>
+                <div class="print-only-text p-2 text-xs" id="sec5ComentarioPrint"></div>
+              </div>
+              <div class="flex items-center gap-2 shrink-0 sm:ml-2 mt-2 sm:mt-0">
+                <label class="no-print cursor-pointer text-ink-500 hover:text-metso-500 transition-colors bg-white hover:bg-metso-50 rounded px-2 py-1 flex items-center gap-1 text-[10px] font-bold border border-ink-200" title="Anexar Foto/Vídeo">
+                  <i class="fa-solid fa-paperclip"></i><span>Anexar</span>
+                  <input type="file" multiple accept="image/*,video/*" onchange="handleAttachment(event, 'sec5')" class="hidden">
+                </label>
+                <div id="attach_container_sec5" class="flex flex-wrap gap-1 items-center"></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 6. ROTEIRO DE MANUTENÇÃO INICIAL -->
+      <div class="border border-ink-200 overflow-hidden page-break">
+        <div class="section-head text-white font-black text-[11px] px-4 py-2.5 uppercase flex items-center gap-2.5">
+          <span class="w-1 h-3 bg-metso-500"></span>
+          <span>6 - Roteiro de Manutenção Inicial</span>
+        </div>
+        <div class="p-4 bg-white space-y-4 text-xs">
+          
+          <div class="p-2 bg-ink-50 rounded border border-ink-200">
+            <div class="font-bold text-ink-700 mb-2">6.1. Após 40 horas:</div>
+            <div class="space-y-1">
+              <div class="flex items-start gap-2">
+                <span class="text-ink-500 font-bold">6.1.1.</span>
+                <div class="flex-grow">Retroquer todos os parafusos da peneira com prioridade a fixação dos mecanismos, seguido dos cardans, revestimentos da mesa de alimentação, revestimentos laterais e proteções. Os valores de torque devem ser consultados no manual da máquina.</div>
+              </div>
+              <div class="flex items-start gap-2">
+                <span class="text-ink-500 font-bold">6.1.2.</span>
+                <div class="flex-grow">Desconectar mangueiras para testar e conferir fluxo de graxa nos mancais (se aplicável).</div>
+              </div>
+              <div class="flex items-start gap-2">
+                <span class="text-ink-500 font-bold">6.1.3.</span>
+                <div class="flex-grow">Conferir esticamento das correias de transmissão (se aplicável).</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-2 bg-ink-50 rounded border border-ink-200">
+            <div class="font-bold text-ink-700 mb-2">6.2. Após 1000 horas:</div>
+            <div class="space-y-1">
+              <div class="flex items-start gap-2">
+                <span class="text-ink-500 font-bold">6.2.1.</span>
+                <div class="flex-grow">Conferir aperto dos parafusos de fixação dos mancais dos mecanismos.</div>
+              </div>
+              <div class="flex items-start gap-2">
+                <span class="text-ink-500 font-bold">6.2.2.</span>
+                <div class="flex-grow">Conferir aperto dos parafusos de fixação dos cardans.</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 7. ASSINATURAS -->
+      <div class="border border-ink-200 overflow-hidden page-break">
+        <div class="section-head text-white font-black text-[11px] px-4 py-2.5 uppercase flex items-center gap-2.5">
+          <span class="w-1 h-3 bg-metso-500"></span>
+          <span>7 - Assinaturas</span>
+        </div>
+        <div class="p-4 bg-white grid grid-cols-1 sm:grid-cols-2 gap-6">
+          
+          <!-- Técnico -->
+          <div class="border border-ink-200 bg-ink-25 p-3 flex flex-col gap-2.5 signature-wrap">
+            <div class="relative w-full">
+              <canvas id="canvas_sigTecnico" class="signature-canvas border border-ink-200"></canvas>
+              <img id="img_sigTecnico" src="" class="signature-img-print" alt="Assinatura Técnico">
+            </div>
+            <div class="flex items-center justify-between mt-1">
+              <span class="text-[10px] text-ink-500 uppercase font-bold">Técnico Metso</span>
+              <button type="button" onclick="clearSignature('sigTecnico')" class="text-[9px] text-metso-500 hover:text-metso-700 font-bold uppercase no-print"><i class="fa-solid fa-eraser"></i> Limpar</button>
+            </div>
+            <div class="flex items-center gap-2 text-[10px]"><span class="font-bold text-ink-500 uppercase w-12">Nome</span><input type="text" id="sigTecnicoName" class="w-full outline-none border-b border-ink-200 focus:border-ink-900 font-medium bg-transparent" placeholder="Nome do Técnico"></div>
+            <div class="flex items-center gap-2 text-[10px]"><span class="font-bold text-ink-500 uppercase w-12">Cargo</span><input type="text" id="sigTecnicoCargo" class="w-full outline-none border-b border-ink-200 focus:border-ink-900 font-medium bg-transparent" placeholder="Cargo / Função"></div>
+            <div class="flex items-center gap-2 text-[10px]"><span class="font-bold text-ink-500 uppercase w-12">Data</span><input type="date" id="sigTecnicoDate" class="w-full outline-none border-b border-ink-200 focus:border-ink-900 font-medium bg-transparent"></div>
+          </div>
+
+          <!-- Cliente -->
+          <div class="border border-ink-200 bg-ink-25 p-3 flex flex-col gap-2.5 signature-wrap">
+            <div class="relative w-full">
+              <canvas id="canvas_sigCliente" class="signature-canvas border border-ink-200"></canvas>
+              <img id="img_sigCliente" src="" class="signature-img-print" alt="Assinatura Cliente">
+            </div>
+            <div class="flex items-center justify-between mt-1">
+              <span class="text-[10px] text-ink-500 uppercase font-bold">Cliente</span>
+              <button type="button" onclick="clearSignature('sigCliente')" class="text-[9px] text-metso-500 hover:text-metso-700 font-bold uppercase no-print"><i class="fa-solid fa-eraser"></i> Limpar</button>
+            </div>
+            <div class="flex items-center gap-2 text-[10px]"><span class="font-bold text-ink-500 uppercase w-12">Nome</span><input type="text" id="sigClienteName" class="w-full outline-none border-b border-ink-200 focus:border-ink-900 font-medium bg-transparent" placeholder="Nome do Representante"></div>
+            <div class="flex items-center gap-2 text-[10px]"><span class="font-bold text-ink-500 uppercase w-12">Cargo</span><input type="text" id="sigClienteCargo" class="w-full outline-none border-b border-ink-200 focus:border-ink-900 font-medium bg-transparent" placeholder="Cargo / Função"></div>
+            <div class="flex items-center gap-2 text-[10px]"><span class="font-bold text-ink-500 uppercase w-12">Data</span><input type="date" id="sigClienteDate" class="w-full outline-none border-b border-ink-200 focus:border-ink-900 font-medium bg-transparent"></div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RODAPÉ -->
+    <div class="bg-ink-950 text-white px-5 py-4 flex flex-col sm:flex-row justify-between items-center gap-3">
+      <div class="flex items-center gap-2">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/f/f9/Metso-logo.png" alt="Metso" class="h-5 w-auto object-contain brightness-0 invert pb-0.5">
+        <span class="text-white/40 mx-1">|</span>
+        <span class="text-ink-400 uppercase tracking-widest text-[9px] font-bold">Field Service</span>
+      </div>
+      <div class="text-center sm:text-right leading-tight text-ink-300 text-[10px] sm:text-[11px]">
+        <div>Av. Independência, 2500 — Iporanga, Sorocaba — SP, 18087-101</div>
+        <div class="font-bold mt-0.5">Metso 2025/2026 © Todos os Direitos Reservados</div>
+      </div>
+    </div>
+
+  </form>
+
+  <!-- ÁREA DE AÇÕES EXCLUSIVAS DO CLIENTE (SÓ APARECE PARA ELE) -->
+  <div class="max-w-6xl mx-auto mb-8 no-print" style="width: calc(100% - 1.5rem); margin-left: auto; margin-right: auto;">
+    <div class="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+      <h3 class="text-sm font-bold text-green-800 mb-2"><i class="fa-brands fa-whatsapp text-green-600 mr-1"></i> Área do Cliente</h3>
+      <p class="text-xs text-green-700 mb-4">Após preencher os dados e assinar o documento no campo "Cliente" acima, clique no botão abaixo para devolver o arquivo preenchido ao Técnico.</p>
+      <button onclick="compartilharViaWhatsApp('assinado')" class="btn-whatsapp rounded shadow-sm inline-flex items-center gap-2" title="Devolver Assinado">
+        <i class="fa-brands fa-whatsapp"></i><span>Devolver Assinado (WhatsApp)</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ======================================================= -->
+  <!-- MODAL DE VISUALIZAÇÃO DE MÍDIA (CARROSSEL)              -->
+  <!-- ======================================================= -->
+  <div id="mediaModal" class="fixed inset-0 bg-ink-950/90 z-[70] hidden items-center justify-center p-4 backdrop-blur-sm no-print" onclick="closeMediaModal()">
+    
+    <div class="relative w-full max-w-5xl flex flex-col items-center justify-center h-full" onclick="event.stopPropagation()">
+      
+      <button type="button" onclick="closeMediaModal()" class="absolute top-0 right-0 text-white hover:text-ink-300 text-3xl font-bold p-2 transition-colors z-20" title="Fechar">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <button id="btnPrevMedia" onclick="navigateMedia(-1)" class="absolute left-0 sm:left-4 top-1/2 -translate-y-1/2 bg-ink-800/80 hover:bg-metso-500 text-white w-12 h-12 rounded-full flex items-center justify-center text-xl transition-colors z-20 shadow-lg">
+        <i class="fa-solid fa-chevron-left"></i>
+      </button>
+      
+      <button id="btnNextMedia" onclick="navigateMedia(1)" class="absolute right-0 sm:right-4 top-1/2 -translate-y-1/2 bg-ink-800/80 hover:bg-metso-500 text-white w-12 h-12 rounded-full flex items-center justify-center text-xl transition-colors z-20 shadow-lg">
+        <i class="fa-solid fa-chevron-right"></i>
+      </button>
+
+      <div id="modalContentContainer" class="w-full max-h-[75vh] flex justify-center items-center px-14">
+        <!-- O conteúdo (img ou video) é injetado aqui -->
+      </div>
+      
+      <div class="mt-4 flex flex-col items-center gap-2">
+        <p id="modalCaption" class="text-white text-sm font-medium bg-ink-900/90 px-4 py-1.5 rounded-full border border-ink-700"></p>
+        <a id="modalDownloadLink" href="#" download class="text-[10px] text-metso-500 hover:text-metso-400 uppercase font-bold tracking-widest transition-colors">
+          <i class="fa-solid fa-download mr-1"></i> Baixar Arquivo
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div id="toast" class="fixed bottom-5 right-5 bg-ink-950 text-white px-4 py-3 rounded-lg shadow-2xl z-50 transform translate-y-20 opacity-0 transition-all duration-300 flex items-center gap-3 border border-ink-800 no-print">
+    <i id="toastIcon" class="fa-solid fa-circle-check text-white"></i>
+    <span id="toastMessage" class="text-sm font-semibold">OK</span>
+  </div>
+
+  <!-- JavaScript Lógico -->
+  <script src="logic.js"></script>
+</body>
+</html>
